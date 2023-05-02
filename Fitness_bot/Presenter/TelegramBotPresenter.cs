@@ -15,8 +15,15 @@ public class TelegramBotPresenter
     public static readonly Dictionary<long, User> Users = new();
     public static readonly Dictionary<long, ActionStatus> TrainersActions = new();
     public static readonly Dictionary<long, Training> Trainings = new();
+    
+    private TelegramBotModel _model;
 
-    public static async Task HandleUpdate(ITelegramBotClient botClient, Update update,
+    public TelegramBotPresenter(TelegramBotModel telegramBotModel)
+    {
+        _model = telegramBotModel;
+    }
+
+    public Task HandleUpdate(ITelegramBotClient botClient, Update update,
         CancellationToken cancellationToken)
     {
         if (update.Type == UpdateType.CallbackQuery)
@@ -25,9 +32,11 @@ public class TelegramBotPresenter
         // Если получили сообщение
         if (update.Type == UpdateType.Message)
             HandleMessage(botClient, update, cancellationToken);
+        
+        return Task.CompletedTask;
     }
 
-    private static void HandleMessage(ITelegramBotClient botClient, Update update,
+    private void HandleMessage(ITelegramBotClient botClient, Update update,
         CancellationToken cancellationToken)
     {
         var message = update.Message;
@@ -37,56 +46,25 @@ public class TelegramBotPresenter
 
         long id = message.Chat.Id;
 
-        // Проверили, заполняет ли пользователь анкету
+        // Проверяем, вводит ли ожидаемые данные клиент
         if (Statuses.ContainsKey(id))
         {
-            HandleUserAnswersAsync(botClient, message, cancellationToken);
+            HandleClientAnswers(botClient, message, cancellationToken);
             return;
         }
-
-        // Проверяем, тренер ли это
-        Trainer? trainer = Db.GetTrainerById(id);
-
-        if (trainer != null) // пришёл зарегистрированный тренер
+        
+        // Проверяем, вводит ли ожидаемые данные тренер
+        if (TrainersActions.ContainsKey(id))
         {
-            // если тренер 
-            if (TrainersActions.ContainsKey(id))
-            {
-                HandleTrainerAnswersAsync(botClient, message, cancellationToken);
-                return;
-            }
-
-            MessageSender.SendTrainerMenu(botClient, message, cancellationToken);
+            HandleTrainerAnswers(botClient, message, cancellationToken);
             return;
         }
-
-        if (message.Chat.Username != null)
-        {
-            User? user = Db.GetUserByUsername(message.Chat.Username);
-
-            // Если в БД нет такого пользователя
-            if (user == null)
-            {
-                MessageSender.SendQuestion(botClient, message, cancellationToken);
-                return;
-            }
-
-            // Если в БД есть такой пользователь
-            if (!user.FinishedForm())
-            {
-                MessageSender.SendFormStart(botClient, message, cancellationToken);
-
-                Statuses.Add(message.Chat.Id, FormStatus.Name);
-                user.Id = message.Chat.Id;
-                Users.Add(message.Chat.Id, user);
-
-                MessageSender.SendTextMessage(botClient, message, cancellationToken, "Введите ваше имя:");
-            }
-        }
+        
+        _model.HandleMessageDateBase(botClient, message, cancellationToken);
     }
 
     // В случае получния ошибки
-    public static Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception,
+    public Task HandleError(ITelegramBotClient botClient, Exception exception,
         CancellationToken cancellationToken)
     {
         Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(exception));
@@ -94,224 +72,99 @@ public class TelegramBotPresenter
     }
 
     // Опрос для пользователя
-    private static async void HandleUserAnswersAsync(ITelegramBotClient botClient, Message message,
+    private void HandleClientAnswers(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
         switch (Statuses[message.Chat.Id])
         {
             case FormStatus.Name:
-                TelegramBotModel.InputName(botClient, message, cancellationToken);
+                _model.InputName(botClient, message, cancellationToken);
                 break;
 
             case FormStatus.Surname:
-                TelegramBotModel.InputSurname(botClient, message, cancellationToken);
+                _model.InputSurname(botClient, message, cancellationToken);
                 break;
 
             case FormStatus.DateOfBirth:
-                TelegramBotModel.InputDateOfBirth(botClient, message, cancellationToken);
+                _model.InputDateOfBirth(botClient, message, cancellationToken);
                 break;
 
             case FormStatus.Goal:
-                TelegramBotModel.InputGoal(botClient, message, cancellationToken);
+                _model.InputGoal(botClient, message, cancellationToken);
                 break;
 
             case FormStatus.Weight:
-                if (int.TryParse(message.Text, out int weight))
-                {
-                    Users[message.Chat.Id].Weight = weight;
-                    Statuses[message.Chat.Id] = FormStatus.Height;
-                    MessageSender.SendInputMessage(botClient, message, cancellationToken, "рост (в см)");
-                }
-                else
-                    MessageSender.SendFailureMessage(botClient, message, cancellationToken, "вес");
+                _model.InputWeight(botClient, message, cancellationToken);
                 break;
 
             case FormStatus.Height:
-                if (int.TryParse(message.Text, out int height))
-                {
-                    Users[message.Chat.Id].Height = height;
-                    Statuses[message.Chat.Id] = FormStatus.Contraindications;
-                    MessageSender.SendInputMessage(botClient, message, cancellationToken, "противопоказания");
-                }
-                else
-                    MessageSender.SendFailureMessage(botClient, message, cancellationToken, "рост");
+                _model.InputHeight(botClient, message, cancellationToken);
                 break;
 
             case FormStatus.Contraindications:
-                Users[message.Chat.Id].Contraindications = message.Text;
-                Statuses[message.Chat.Id] = FormStatus.HaveExp;
-                await botClient.SendTextMessageAsync(message.Chat, "Есть ли у вас опыт в спорте?",
-                    cancellationToken: cancellationToken);
+                _model.InputContraindications(botClient, message, cancellationToken);
                 break;
 
             case FormStatus.HaveExp:
-                Users[message.Chat.Id].HaveExp = message.Text;
-                Statuses[message.Chat.Id] = FormStatus.Bust;
-                MessageSender.SendInputMessage(botClient, message, cancellationToken, "обхват груди (в см)");
+                _model.InputExp(botClient, message, cancellationToken);
                 break;
 
             case FormStatus.Bust:
-                if (int.TryParse(message.Text, out int bust))
-                {
-                    Users[message.Chat.Id].Bust = bust;
-                    Statuses[message.Chat.Id] = FormStatus.Waist;
-                    MessageSender.SendInputMessage(botClient, message, cancellationToken, "обхват талии (в см)");
-                }
-                else
-                    MessageSender.SendFailureMessage(botClient, message, cancellationToken, "обхват груди");
-
+                _model.InputBust(botClient, message, cancellationToken);
                 break;
 
             case FormStatus.Waist:
-                if (int.TryParse(message.Text, out int waist))
-                {
-                    Users[message.Chat.Id].Waist = waist;
-                    Statuses[message.Chat.Id] = FormStatus.Stomach;
-                    MessageSender.SendInputMessage(botClient, message, cancellationToken, "обхват живота (в см)");
-                }
-                else
-                    MessageSender.SendFailureMessage(botClient, message, cancellationToken, "обхват талии");
-
+                _model.InputWaist(botClient, message, cancellationToken);
                 break;
 
             case FormStatus.Stomach:
-                if (int.TryParse(message.Text, out int stomach))
-                {
-                    Users[message.Chat.Id].Stomach = stomach;
-                    Statuses[message.Chat.Id] = FormStatus.Hips;
-                    MessageSender.SendInputMessage(botClient, message, cancellationToken, "обхват бёдер (в см)");
-                }
-                else
-                    MessageSender.SendFailureMessage(botClient, message, cancellationToken, "обхват живота");
-
+                _model.InputStomach(botClient, message, cancellationToken);
                 break;
 
             case FormStatus.Hips:
-                if (int.TryParse(message.Text, out int hips))
-                {
-                    Users[message.Chat.Id].Hips = hips;
-                    Statuses[message.Chat.Id] = FormStatus.Legs;
-                    MessageSender.SendInputMessage(botClient, message, cancellationToken, "обхват ноги (в см)");
-                }
-                else
-                    MessageSender.SendFailureMessage(botClient, message, cancellationToken, "обхват бёдер");
-
+                _model.InputHips(botClient, message, cancellationToken);
                 break;
 
             case FormStatus.Legs:
-                if (int.TryParse(message.Text, out int legs))
-                {
-                    Users[message.Chat.Id].Legs = legs;
-
-                    Db.UpdateUser(Users[message.Chat.Id]);
-
-                    // Очищаем из памяти, чтобы не засорять
-                    Users.Remove(message.Chat.Id);
-                    Statuses.Remove(message.Chat.Id);
-
-                    MessageSender.SendFormFinish(botClient, message, cancellationToken);
-                }
-                else
-                    MessageSender.SendFailureMessage(botClient, message, cancellationToken, "обхват ноги");
-
+                _model.InputLegs(botClient, message, cancellationToken);
                 break;
         }
     }
 
     // Обработчик ответов тренера
-    private static async void HandleTrainerAnswersAsync(ITelegramBotClient botClient, Message message,
+    private void HandleTrainerAnswers(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        Debug.Assert(message.Text != null, "message.Text != null");
-
         switch (TrainersActions[message.Chat.Id])
         {
             case ActionStatus.AddClientUsername:
-                User user = new User(message.Text, message.Chat.Id);
-                Db.AddUser(user);
-                TrainersActions.Remove(message.Chat.Id);
-
-                await botClient.SendTextMessageAsync(message.Chat,
-                    "Клиент успешно добавлен в базу данных. Теперь ему необходимо заполнить анкету.",
-                    cancellationToken: cancellationToken);
-
-                TrainersActions.Remove(message.Chat.Id);
+                _model.AddClientUsername(botClient, message, cancellationToken);
                 break;
 
             case ActionStatus.DeleteClientByUsername:
-                Db.DeleteClientByUsername(message.Text);
-                TrainersActions.Remove(message.Chat.Id);
-
-                await botClient.SendTextMessageAsync(message.Chat,
-                    "Клиент успешно удалён из базы данных.",
-                    cancellationToken: cancellationToken);
-
-                TrainersActions.Remove(message.Chat.Id);
+                _model.DeleteClientByUsername(botClient, message, cancellationToken);
                 break;
 
             case ActionStatus.AddTrainingDate:
-                if (DateTime.TryParseExact(message.Text, "dd.MM.yyyy HH:mm", null,
-                        System.Globalization.DateTimeStyles.None, out DateTime dt))
-                {
-                    Training training = new Training(dt, message.Chat.Id);
-                    Trainings.Add(message.Chat.Id, training);
-                    TrainersActions[message.Chat.Id] = ActionStatus.AddTrainingLocation;
-
-                    await botClient.SendTextMessageAsync(message.Chat,
-                        "Введите адрес места проведения тренировки:",
-                        cancellationToken: cancellationToken);
-                }
-                else
-                    await botClient.SendTextMessageAsync(message.Chat,
-                        "Не удалось ввести дату, попробуйте снова:",
-                        cancellationToken: cancellationToken);
-
+                _model.AddTrainingDate(botClient, message, cancellationToken);
                 break;
 
             case ActionStatus.AddTrainingLocation:
-                Trainings[message.Chat.Id].Location = message.Text;
-                TrainersActions[message.Chat.Id] = ActionStatus.AddClientForTraining;
-
-                await botClient.SendTextMessageAsync(message.Chat,
-                    "Если вы хотите добавить окно для клиентов, то введите 'окно', иначе введите имя пользователя клиента в Telegram:",
-                    cancellationToken: cancellationToken);
+                _model.AddTrainingLocation(botClient, message, cancellationToken);
                 break;
 
             case ActionStatus.AddClientForTraining:
-                Trainings[message.Chat.Id].ClientUsername = message.Text;
-
-                Db.AddTraining(Trainings[message.Chat.Id]);
-
-                Trainings.Remove(message.Chat.Id);
-                TrainersActions.Remove(message.Chat.Id);
-
-                await botClient.SendTextMessageAsync(message.Chat,
-                    message.Text == "окно" ? "Окно для тренировок успешно добавлено." : "Тренировка успешно добавлена.",
-                    cancellationToken: cancellationToken);
+                _model.AddClientForTraining(botClient, message, cancellationToken);
                 break;
 
             case ActionStatus.DeleteTrainingByTime:
-                if (DateTime.TryParseExact(message.Text, "dd.MM.yyyy HH:mm", null,
-                        System.Globalization.DateTimeStyles.None, out DateTime dateTime))
-                {
-                    Db.DeleteTrainingByDateTime(dateTime);
-                    TrainersActions.Remove(message.Chat.Id);
-
-                    await botClient.SendTextMessageAsync(message.Chat,
-                        "Тренировка успешно удалена из базы данных.",
-                        cancellationToken: cancellationToken);
-                }
-                else
-                    await botClient.SendTextMessageAsync(message.Chat,
-                        "Не удалось ввести дату, попробуйте снова:",
-                        cancellationToken: cancellationToken);
-
+                _model.DeleteTrainingByTime(botClient, message, cancellationToken);
                 break;
         }
     }
 
     // Обработчик нажатых кнопок
-    private static async void HandleCallbackQuery(ITelegramBotClient botClient, Update update,
+    private void HandleCallbackQuery(ITelegramBotClient botClient, Update update,
         CancellationToken cancellationToken)
     {
         var queryMessage = update.CallbackQuery?.Message;
@@ -322,111 +175,49 @@ public class TelegramBotPresenter
         switch (update.CallbackQuery?.Data)
         {
             case "t_timetable":
-                await botClient.SendTextMessageAsync(queryMessage.Chat,
-                    "Выберите пункт меню:",
-                    replyMarkup: MenuButtons.TrainerTimetableMenu(),
-                    cancellationToken: cancellationToken);
+                _model.TrainerTimetable(botClient, queryMessage, cancellationToken);
                 break;
 
             case "clients":
-                await botClient.SendTextMessageAsync(queryMessage.Chat,
-                    "Выберите пункт меню:",
-                    replyMarkup: MenuButtons.TrainerClientsMenu(),
-                    cancellationToken: cancellationToken);
+                _model.TrainerClients(botClient, queryMessage, cancellationToken);
                 break;
 
             case "add_training":
-                await botClient.SendTextMessageAsync(queryMessage.Chat,
-                    "Чтобы добавить тренировку, введите время проведения в формате dd.MM.yyyy HH:mm:",
-                    cancellationToken: cancellationToken);
-
-                TrainersActions.Add(queryMessage.Chat.Id, ActionStatus.AddTrainingDate);
+                _model.AddTraining(botClient, queryMessage, cancellationToken);
                 break;
 
             case "cancel_training":
-                await botClient.SendTextMessageAsync(queryMessage.Chat,
-                    "Чтобы удалить тренировку, введите время проведения в формате dd.MM.yyyy HH:mm:",
-                    cancellationToken: cancellationToken);
-
-                TrainersActions.Add(queryMessage.Chat.Id, ActionStatus.DeleteTrainingByTime);
+                _model.CancelTraining(botClient, queryMessage, cancellationToken);
                 break;
 
             case "week_timetable":
-                List<Training> trainings = Db.GetTrainingsByTrainerId(queryMessage.Chat.Id);
-                DateTime now = DateTime.Now;
-
-                List<Training> trainingsIn7Days =
-                    trainings.Where(t => (t.Time >= now) && (t.Time <= now.AddDays(7)) && (t.ClientUsername != "окно"))
-                        .ToList();
-
-                var groupedTrainings = trainingsIn7Days.GroupBy(t => t.Time.DayOfWeek);
-
-                StringBuilder timetable = new StringBuilder();
-
-                foreach (var group in groupedTrainings)
-                {
-                    timetable.Append(group.Key).Append('\n');
-
-                    foreach (var t in group)
-                        timetable.Append(t).Append("\n\n");
-                }
-
-                await botClient.SendTextMessageAsync(queryMessage.Chat,
-                    timetable.ToString(),
-                    cancellationToken: cancellationToken);
-
+                _model.WeekTrainerTimetable(botClient, queryMessage, cancellationToken);
                 break;
 
             case "add_client":
-                await botClient.SendTextMessageAsync(queryMessage.Chat,
-                    "Чтобы добавить клиента, введите его имя пользователя в Telegram:",
-                    cancellationToken: cancellationToken);
-
-                TrainersActions.Add(queryMessage.Chat.Id, ActionStatus.AddClientUsername);
+                _model.AddClient(botClient, queryMessage, cancellationToken);
                 break;
 
             case "delete_client":
-                await botClient.SendTextMessageAsync(queryMessage.Chat,
-                    "Чтобы удалить клиента клиента, введите его имя пользователя в Telegram:",
-                    cancellationToken: cancellationToken);
-
-                TrainersActions.Add(queryMessage.Chat.Id, ActionStatus.DeleteClientByUsername);
+                _model.DeleteClient(botClient, queryMessage, cancellationToken);
                 break;
 
             case "check_base":
-                List<User> users = Db.GetAllClientsByTrainerId(queryMessage.Chat.Id);
-
-                StringBuilder sb = new StringBuilder();
-
-                for (int i = 0; i < users.Count; i++)
-                    sb.Append(i + 1).Append(") ").Append(users[i]).Append("\n\n");
-
-                await botClient.SendTextMessageAsync(queryMessage.Chat,
-                    sb.ToString(),
-                    cancellationToken: cancellationToken);
-
+                _model.CheckBase(botClient, queryMessage, cancellationToken);
                 break;
 
             case "cl_timetable":
-                Console.WriteLine("HellO!");
                 break;
 
             case "cl_form":
                 break;
 
             case "i_am_trainer": // пришёл новый тренер
-                Db.AddTrainer(new Trainer(queryMessage.Chat.Id, queryMessage.Chat.Username));
-
-                await botClient.SendTextMessageAsync(queryMessage.Chat,
-                    "Инструкция для тренера (написать)",
-                    replyMarkup: MenuButtons.TrainerMenu(),
-                    cancellationToken: cancellationToken);
+                _model.TrainerRegistration(botClient, queryMessage, cancellationToken);
                 break;
 
             case "i_am_client":
-                await botClient.SendTextMessageAsync(queryMessage.Chat,
-                    "Извините, тренер пока не добавил вас в список своих клиентов",
-                    cancellationToken: cancellationToken);
+                _model.RejectNewUser(botClient, queryMessage, cancellationToken);
                 break;
         }
     }
