@@ -408,6 +408,7 @@ public class TelegramBotPresenter
                 break;
 
             case "cl_timetable":
+                Console.WriteLine("HellO!");
                 break;
 
             case "cl_form":
