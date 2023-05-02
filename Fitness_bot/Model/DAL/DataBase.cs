@@ -2,7 +2,7 @@ using System.Data;
 using System.Data.SQLite;
 using Fitness_bot.Model;
 
-namespace Fitness_bot;
+namespace Fitness_bot.Model.DAL;
 
 public class DataBase
 {
