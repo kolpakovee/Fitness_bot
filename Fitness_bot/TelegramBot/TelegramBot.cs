@@ -6,6 +6,7 @@ using Telegram.Bot;
 
 namespace Fitness_bot.TelegramBot;
 
+// TODO: пофиксить ПРОСМОТР БАЗЫ тренера (когда клиент не прошёл анкету)
 // TODO: написать комментарии со всеми входными параметрами
 // TODO: сделать логгер
 
@@ -18,20 +19,21 @@ static class TelegramBot
     static void Main()
     {
         var cts = new CancellationTokenSource();
-
-        DataBase db = new DataBase();
+        
+        // TODO: создать класс инициализации и пихнуть туда
         MessageSender messageSender = new MessageSender();
-        TelegramBotModel telegramBotModel = new TelegramBotModel(messageSender, db.Connection);
+        TelegramBotContext context = new TelegramBotContext();
+        TelegramBotModel telegramBotModel = new TelegramBotModel(messageSender, context);
         
         TelegramBotPresenter presenter = new TelegramBotPresenter(telegramBotModel);
-
+        
         // Запуск бота
         BotClient.Start(
             cts.Token,
             presenter.HandleUpdate,
             presenter.HandleError
         );
-
+        
         Console.ReadLine();
     }
 }

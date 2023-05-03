@@ -1,43 +1,28 @@
-using System.Data.SQLite;
+using Fitness_bot.Model.DAL.Interfaces;
+using Fitness_bot.Model.Domain;
 
 namespace Fitness_bot.Model.DAL;
 
-public class TrainerRepository
+public class TrainerRepository : ITrainerRepository
 {
-    private readonly SQLiteConnection _connection;
+    private readonly TelegramBotContext _context;
 
-    public TrainerRepository(SQLiteConnection connection)
+    public TrainerRepository(TelegramBotContext context)
     {
-        _connection = connection;
+        _context = context;
     }
 
-    public bool AddTrainer(Trainer trainer)
+    public void AddTrainer(Trainer trainer)
     {
-        string query = $"INSERT INTO Trainers ('id', 'name') VALUES ({trainer.Id}, '{trainer.Username}')";
-
-        SQLiteCommand command = new SQLiteCommand(query, _connection);
-
-        int count = command.ExecuteNonQuery();
-
-        return count != 0;
+        _context.Trainers.Add(trainer);
+        _context.SaveChanges();
     }
     
     public Trainer? GetTrainerById(long trainerId)
     {
-        string query = $"SELECT * FROM Trainers WHERE id={trainerId}";
+        var trainer = _context.Trainers
+            .FirstOrDefault(t => t.Id == trainerId);
 
-        SQLiteCommand command = new SQLiteCommand(query, _connection);
-
-        SQLiteDataReader dataReader = command.ExecuteReader();
-
-        if (dataReader.HasRows)
-        {
-            while (dataReader.Read())
-            {
-                return new Trainer(dataReader.GetInt64(0), dataReader.GetString(1));
-            }
-        }
-
-        return null;
+        return trainer;
     }
 }

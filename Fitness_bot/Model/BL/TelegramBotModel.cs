@@ -1,7 +1,8 @@
-using System.Data.SQLite;
 using System.Text;
 using Fitness_bot.Enums;
 using Fitness_bot.Model.DAL;
+using Fitness_bot.Model.DAL.Interfaces;
+using Fitness_bot.Model.Domain;
 using Fitness_bot.Presenter;
 using Fitness_bot.View;
 using Telegram.Bot;
@@ -11,17 +12,17 @@ namespace Fitness_bot.Model.BL;
 
 public class TelegramBotModel
 {
-    private readonly ClientRepository _clientRepository;
-    private readonly TrainerRepository _trainerRepository;
-    private readonly TrainingRepository _trainingRepository;
+    private readonly IClientRepository _clientRepository;
+    private readonly ITrainerRepository _trainerRepository;
+    private readonly ITrainingRepository _trainingRepository;
     private readonly MessageSender _sender;
 
-    public TelegramBotModel(MessageSender messageSender, SQLiteConnection connection)
+    public TelegramBotModel(MessageSender sender, TelegramBotContext context)
     {
-        _clientRepository = new ClientRepository(connection);
-        _trainerRepository = new TrainerRepository(connection);
-        _trainingRepository = new TrainingRepository(connection);
-        _sender = messageSender;
+        _clientRepository = new ClientRepository(context);
+        _trainerRepository = new TrainerRepository(context);
+        _trainingRepository = new TrainingRepository(context);
+        _sender = sender;
     }
 
     public void InputName(ITelegramBotClient botClient, Message message,
@@ -174,7 +175,7 @@ public class TelegramBotModel
     {
         if (message.Text == null) return;
 
-        User client = new User(message.Text, message.Chat.Id);
+        Client client = new Client(message.Text, message.Chat.Id);
 
         _clientRepository.AddClient(client);
 
@@ -296,7 +297,9 @@ public class TelegramBotModel
                 timetable.Append(t).Append("\n\n");
         }
 
-        _sender.SendTextMessage(botClient, message, cancellationToken, timetable.ToString());
+        String text = timetable.Length == 0 ? "Тренировок на ближайшие 7 дней нет :)" : timetable.ToString();
+        
+        _sender.SendTextMessage(botClient, message, cancellationToken, text);
     }
 
     public void AddClient(ITelegramBotClient botClient, Message message,
@@ -316,14 +319,16 @@ public class TelegramBotModel
     public void CheckBase(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        List<User> users = _clientRepository.GetAllClientsByTrainerId(message.Chat.Id);
+        List<Client> users = _clientRepository.GetAllClientsByTrainerId(message.Chat.Id);
 
         StringBuilder sb = new StringBuilder();
 
         for (int i = 0; i < users.Count; i++)
             sb.Append(i + 1).Append(") ").Append(users[i]).Append("\n\n");
 
-        _sender.SendTextMessage(botClient, message, cancellationToken, sb.ToString());
+        String text = sb.Length == 0 ? "Пока клиентов в базе нет :)" : sb.ToString();
+
+        _sender.SendTextMessage(botClient, message, cancellationToken, text);
     }
 
     public void TrainerRegistration(ITelegramBotClient botClient, Message message,
@@ -357,23 +362,23 @@ public class TelegramBotModel
 
         if (message.Chat.Username != null)
         {
-            User? user = _clientRepository.GetClientByUsername(message.Chat.Username);
+            Client? client = _clientRepository.GetClientByUsername(message.Chat.Username);
 
             // Если в БД нет такого пользователя
-            if (user == null)
+            if (client == null)
             {
                 _sender.SendQuestion(botClient, message, cancellationToken);
                 return;
             }
 
             // Если в БД есть такой пользователь
-            if (!user.FinishedForm())
+            if (!client.FinishedForm())
             {
                 _sender.SendFormStart(botClient, message, cancellationToken);
 
                 TelegramBotPresenter.Statuses.Add(message.Chat.Id, FormStatus.Name);
-                user.Id = message.Chat.Id;
-                TelegramBotPresenter.Users.Add(message.Chat.Id, user);
+                client.Id = message.Chat.Id;
+                TelegramBotPresenter.Users.Add(message.Chat.Id, client);
 
                 _sender.SendInputMessage(botClient, message, cancellationToken, "имя");
             }

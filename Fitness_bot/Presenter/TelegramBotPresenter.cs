@@ -1,22 +1,20 @@
 using Fitness_bot.Enums;
-using Fitness_bot.Model;
 using Fitness_bot.Model.BL;
-using Fitness_bot.View;
+using Fitness_bot.Model.Domain;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using User = Fitness_bot.Model.User;
 
 namespace Fitness_bot.Presenter;
 
 public class TelegramBotPresenter
 {
     public static readonly Dictionary<long, FormStatus> Statuses = new();
-    public static readonly Dictionary<long, User> Users = new();
+    public static readonly Dictionary<long, Client> Users = new();
     public static readonly Dictionary<long, ActionStatus> TrainersActions = new();
     public static readonly Dictionary<long, Training> Trainings = new();
     
-    private TelegramBotModel _model;
+    private readonly TelegramBotModel _model;
 
     public TelegramBotPresenter(TelegramBotModel telegramBotModel)
     {

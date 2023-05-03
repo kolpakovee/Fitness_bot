@@ -1,62 +1,45 @@
-using System.Data.SQLite;
+using Fitness_bot.Model.DAL.Interfaces;
+using Fitness_bot.Model.Domain;
 
 namespace Fitness_bot.Model.DAL;
 
-public class TrainingRepository
+public class TrainingRepository : ITrainingRepository
 {
-    private readonly SQLiteConnection _connection;
+    private readonly TelegramBotContext _context;
 
-    public TrainingRepository(SQLiteConnection connection)
+    public TrainingRepository(TelegramBotContext context)
     {
-        _connection = connection;
+        _context = context;
     }
-    
-    public bool AddTraining(Training training)
+
+    public void AddTraining(Training training)
     {
-        string query =
-            $"INSERT INTO Trainings ('trainer_id', 'client_username', 'location', 'date_time') VALUES ({training.TrainerId}, '{training.ClientUsername}', '{training.Location}', '{training.Time}')";
-
-        SQLiteCommand command = new SQLiteCommand(query, _connection);
-
-        int count = command.ExecuteNonQuery();
-
-        return count != 0;
+        _context.Trainings.Add(training);
+        _context.SaveChanges();
     }
     
     public List<Training> GetTrainingsByTrainerId(long trainerId)
     {
-        List<Training> trainings = new();
-
-        string query = $"SELECT * FROM Trainings WHERE trainer_id={trainerId}";
-
-        SQLiteCommand command = new SQLiteCommand(query, _connection);
-
-        SQLiteDataReader dataReader = command.ExecuteReader();
-
-        if (dataReader.HasRows)
-        {
-            while (dataReader.Read())
-            {
-                if (DateTime.TryParseExact(dataReader.GetString(3), "dd/MM/yyyy HH:mm:ss", null,
-                        System.Globalization.DateTimeStyles.None, out DateTime dateTime))
-                {
-                    trainings.Add(new Training(dateTime, dataReader.GetInt64(0), dataReader.GetString(1),
-                        dataReader.GetString(2)));
-                }
-            }
-        }
+        List<Training> trainings = _context.Trainings
+            .Where(tr => tr.TrainerId == trainerId)
+            .ToList();
 
         return trainings;
     }
     
-    public bool DeleteTrainingByDateTime(DateTime dateTime)
+    public void DeleteTrainingByDateTime(DateTime dateTime)
     {
-        string query = $"DELETE FROM Trainings WHERE date_time='{dateTime}'";
-
-        SQLiteCommand command = new SQLiteCommand(query, _connection);
-
-        int count = command.ExecuteNonQuery();
-
-        return count != 0;
+        Training? training = _context.Trainings.FirstOrDefault(tr => 
+            tr.Time.Year == dateTime.Year && 
+            tr.Time.Month == dateTime.Month &&
+            tr.Time.Day == dateTime.Day && 
+            tr.Time.Hour == dateTime.Hour &&
+            tr.Time.Minute == dateTime.Minute);
+        
+        if (training != null)
+        {
+            _context.Trainings.Remove(training);
+            _context.SaveChanges();
+        }
     }
 }

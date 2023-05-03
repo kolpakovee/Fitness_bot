@@ -1,7 +1,11 @@
-namespace Fitness_bot.Model;
+using System.ComponentModel.DataAnnotations;
+
+namespace Fitness_bot.Model.Domain;
 
 public class Training
 {
+    [Key]
+    public long Id { get; set; }
     public DateTime Time { get; set; }
     public long TrainerId { get; set; }
     public string? ClientUsername { get; set; }

@@ -1,9 +1,12 @@
-namespace Fitness_bot.Model;
+using System.ComponentModel.DataAnnotations;
 
-public class User
+namespace Fitness_bot.Model.Domain;
+
+public class Client
 {
     public long Id { get; set; }
     public long TrainerId { get; set; }
+    [Key]
     public string Username { get; set; }
     public string? Name { get; set; }
     public string? Surname { get; set; }
@@ -19,13 +22,13 @@ public class User
     public int Hips { get; set; }
     public int Legs { get; set; }
 
-    public User(string username, long trainerId)
+    public Client(string username, long trainerId)
     {
         TrainerId = trainerId;
         Username = username;
     }
 
-    public User(long id, long trainerId, string username, string? name, string? surname, string? dateOfBirth,
+    public Client(long id, long trainerId, string username, string? name, string? surname, string? dateOfBirth,
         string? goal,
         int weight,
         int height, string? contraindications, string? haveExp, int bust, int waist, int stomach, int hips, int legs)
@@ -48,11 +51,7 @@ public class User
         Legs = legs;
     }
 
-    public bool FinishedForm()
-    {
-        return Name != "" && Surname != "" && DateOfBirth != "" && Goal != "" && Contraindications != "" &&
-               HaveExp != "";
-    }
+    public bool FinishedForm() => Legs != 0;
 
     public override string ToString()
     {
