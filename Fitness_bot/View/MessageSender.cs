@@ -137,4 +137,11 @@ public class MessageSender
             "Извините, тренер пока не добавил вас в список своих клиентов",
             cancellationToken: _cancellationToken);
     }
+
+    public async void SendImpossibleToDetermineMes(Chat chat)
+    {
+        await _botClient.SendTextMessageAsync(chat,
+            "Извините, но я не могу определить ваше имя пользователя в Telegram, чтобы идентифицировать :(",
+            cancellationToken: _cancellationToken);
+    }
 }

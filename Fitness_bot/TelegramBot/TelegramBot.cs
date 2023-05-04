@@ -1,4 +1,4 @@
-﻿using Fitness_bot.Model.BL;
+﻿using Fitness_bot.Model.BLL;
 using Fitness_bot.Presenter;
 using Fitness_bot.View;
 using Telegram.Bot;
@@ -22,7 +22,7 @@ static class TelegramBot
         
         // TODO: создать класс инициализации и пихнуть туда
         MessageSender messageSender = new MessageSender(BotClient, cts.Token);
-        TelegramBotModel telegramBotModel = new TelegramBotModel(messageSender);
+        TelegramBotLogic telegramBotModel = new TelegramBotLogic(messageSender);
         TelegramBotPresenter presenter = new TelegramBotPresenter(telegramBotModel);
         
         // Запуск бота

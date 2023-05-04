@@ -16,7 +16,7 @@ public static class TelegramBotExstention
     {
         ReceiverOptions receiverOptions = new()
         {
-            AllowedUpdates = Array.Empty<UpdateType>() // receive all update types
+            AllowedUpdates = Array.Empty<UpdateType>() 
         };
 
         botClient.StartReceiving(

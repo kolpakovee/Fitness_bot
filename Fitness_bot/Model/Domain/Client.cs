@@ -4,8 +4,7 @@ namespace Fitness_bot.Model.Domain;
 
 public class Client : IDomainObject
 {
-    [Key]
-    public string Identifier { get; set; }
+    [Key] public string Identifier { get; set; }
     public long Id { get; set; }
     public long TrainerId { get; set; }
     public string? Name { get; set; }
@@ -64,6 +63,6 @@ public class Client : IDomainObject
             return $"Клиент {Identifier} не прошёл анкету.";
 
         return
-            $"{Name} {Surname}\n- Дата рождения: {DateOfBirth}\n- Цель: {Goal}\n- Вес (кг): {Weight}\n- Рост (см): {Weight}\n- Противопоказания: {Contraindications}\n- Есть ли опыт? {HaveExp}\n- Обхват груди (см): {Bust}\n- Обхват талии (см): {Waist}\n- Обхват живота (см): {Stomach}\n- Обхват бёдер (см): {Hips}\n- Обхват ноги (см): {Legs}";
+            $"{Name} {Surname}\n- Дата рождения: {DateOfBirth}\n- Цель: {Goal}\n- Вес (кг): {Weight}\n- Рост (см): {Height}\n- Противопоказания: {Contraindications}\n- Есть ли опыт? {HaveExp}\n- Обхват груди (см): {Bust}\n- Обхват талии (см): {Waist}\n- Обхват живота (см): {Stomach}\n- Обхват бёдер (см): {Hips}\n- Обхват ноги (см): {Legs}";
     }
 }
