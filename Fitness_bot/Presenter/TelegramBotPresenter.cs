@@ -58,7 +58,7 @@ public class TelegramBotPresenter
             return;
         }
         
-        _model.HandleMessageDateBase(botClient, message, cancellationToken);
+        _model.HandleMessageDateBase(message);
     }
 
     // В случае получния ошибки
@@ -76,55 +76,55 @@ public class TelegramBotPresenter
         switch (Statuses[message.Chat.Id])
         {
             case FormStatus.Name:
-                _model.InputName(botClient, message, cancellationToken);
+                _model.InputName(message);
                 break;
 
             case FormStatus.Surname:
-                _model.InputSurname(botClient, message, cancellationToken);
+                _model.InputSurname(message);
                 break;
 
             case FormStatus.DateOfBirth:
-                _model.InputDateOfBirth(botClient, message, cancellationToken);
+                _model.InputDateOfBirth(message);
                 break;
 
             case FormStatus.Goal:
-                _model.InputGoal(botClient, message, cancellationToken);
+                _model.InputGoal(message);
                 break;
 
             case FormStatus.Weight:
-                _model.InputWeight(botClient, message, cancellationToken);
+                _model.InputWeight(message);
                 break;
 
             case FormStatus.Height:
-                _model.InputHeight(botClient, message, cancellationToken);
+                _model.InputHeight(message);
                 break;
 
             case FormStatus.Contraindications:
-                _model.InputContraindications(botClient, message, cancellationToken);
+                _model.InputContraindications(message);
                 break;
 
             case FormStatus.HaveExp:
-                _model.InputExp(botClient, message, cancellationToken);
+                _model.InputExp(message);
                 break;
 
             case FormStatus.Bust:
-                _model.InputBust(botClient, message, cancellationToken);
+                _model.InputBust(message);
                 break;
 
             case FormStatus.Waist:
-                _model.InputWaist(botClient, message, cancellationToken);
+                _model.InputWaist(message);
                 break;
 
             case FormStatus.Stomach:
-                _model.InputStomach(botClient, message, cancellationToken);
+                _model.InputStomach(message);
                 break;
 
             case FormStatus.Hips:
-                _model.InputHips(botClient, message, cancellationToken);
+                _model.InputHips(message);
                 break;
 
             case FormStatus.Legs:
-                _model.InputLegs(botClient, message, cancellationToken);
+                _model.InputLegs(message);
                 break;
         }
     }
@@ -136,27 +136,27 @@ public class TelegramBotPresenter
         switch (TrainersActions[message.Chat.Id])
         {
             case ActionStatus.AddClientUsername:
-                _model.AddClientUsername(botClient, message, cancellationToken);
+                _model.AddClientUsername(message);
                 break;
 
             case ActionStatus.DeleteClientByUsername:
-                _model.DeleteClientByUsername(botClient, message, cancellationToken);
+                _model.DeleteClientByUsername(message);
                 break;
 
             case ActionStatus.AddTrainingDate:
-                _model.AddTrainingDate(botClient, message, cancellationToken);
+                _model.AddTrainingDate(message);
                 break;
 
             case ActionStatus.AddTrainingLocation:
-                _model.AddTrainingLocation(botClient, message, cancellationToken);
+                _model.AddTrainingLocation(message);
                 break;
 
             case ActionStatus.AddClientForTraining:
-                _model.AddClientForTraining(botClient, message, cancellationToken);
+                _model.AddClientForTraining(message);
                 break;
 
             case ActionStatus.DeleteTrainingByTime:
-                _model.DeleteTrainingByTime(botClient, message, cancellationToken);
+                _model.DeleteTrainingByTime(message);
                 break;
         }
     }
@@ -173,35 +173,35 @@ public class TelegramBotPresenter
         switch (update.CallbackQuery?.Data)
         {
             case "t_timetable":
-                _model.TrainerTimetable(botClient, queryMessage, cancellationToken);
+                _model.TrainerTimetable(queryMessage);
                 break;
 
             case "clients":
-                _model.TrainerClients(botClient, queryMessage, cancellationToken);
+                _model.TrainerClients(queryMessage);
                 break;
 
             case "add_training":
-                _model.AddTraining(botClient, queryMessage, cancellationToken);
+                _model.AddTraining(queryMessage);
                 break;
 
             case "cancel_training":
-                _model.CancelTraining(botClient, queryMessage, cancellationToken);
+                _model.CancelTraining(queryMessage);
                 break;
 
             case "week_timetable":
-                _model.WeekTrainerTimetable(botClient, queryMessage, cancellationToken);
+                _model.WeekTrainerTimetable(queryMessage);
                 break;
 
             case "add_client":
-                _model.AddClient(botClient, queryMessage, cancellationToken);
+                _model.AddClient(queryMessage);
                 break;
 
             case "delete_client":
-                _model.DeleteClient(botClient, queryMessage, cancellationToken);
+                _model.DeleteClient(queryMessage);
                 break;
 
             case "check_base":
-                _model.CheckBase(botClient, queryMessage, cancellationToken);
+                _model.CheckBase(queryMessage);
                 break;
 
             case "cl_timetable":
@@ -211,11 +211,11 @@ public class TelegramBotPresenter
                 break;
 
             case "i_am_trainer": // пришёл новый тренер
-                _model.TrainerRegistration(botClient, queryMessage, cancellationToken);
+                _model.TrainerRegistration(queryMessage);
                 break;
 
             case "i_am_client":
-                _model.RejectNewUser(botClient, queryMessage, cancellationToken);
+                _model.RejectNewUser(queryMessage);
                 break;
         }
     }
