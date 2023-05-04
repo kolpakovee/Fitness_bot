@@ -10,7 +10,7 @@ namespace Fitness_bot.Presenter;
 public class TelegramBotPresenter
 {
     public static readonly Dictionary<long, FormStatus> Statuses = new();
-    public static readonly Dictionary<long, Client> Users = new();
+    public static readonly Dictionary<long, Client> Clients = new();
     public static readonly Dictionary<long, ActionStatus> TrainersActions = new();
     public static readonly Dictionary<long, Training> Trainings = new();
     

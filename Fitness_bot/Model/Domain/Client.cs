@@ -2,12 +2,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Fitness_bot.Model.Domain;
 
-public class Client
+public class Client : IDomainObject
 {
+    [Key]
+    public string Identifier { get; set; }
     public long Id { get; set; }
     public long TrainerId { get; set; }
-    [Key]
-    public string Username { get; set; }
     public string? Name { get; set; }
     public string? Surname { get; set; }
     public string? DateOfBirth { get; set; }
@@ -22,20 +22,25 @@ public class Client
     public int Hips { get; set; }
     public int Legs { get; set; }
 
-    public Client(string username, long trainerId)
+    public Client(string identifier)
     {
-        TrainerId = trainerId;
-        Username = username;
+        Identifier = identifier;
     }
 
-    public Client(long id, long trainerId, string username, string? name, string? surname, string? dateOfBirth,
+    public Client(string identifier, long trainerId)
+    {
+        TrainerId = trainerId;
+        Identifier = identifier;
+    }
+
+    public Client(long id, long trainerId, string identifier, string? name, string? surname, string? dateOfBirth,
         string? goal,
         int weight,
         int height, string? contraindications, string? haveExp, int bust, int waist, int stomach, int hips, int legs)
     {
         Id = id;
         TrainerId = trainerId;
-        Username = username;
+        Identifier = identifier;
         Name = name;
         Surname = surname;
         DateOfBirth = dateOfBirth;
@@ -56,7 +61,7 @@ public class Client
     public override string ToString()
     {
         if (!FinishedForm())
-            return $"Клиент {Username} не прошёл анкету.";
+            return $"Клиент {Identifier} не прошёл анкету.";
 
         return
             $"{Name} {Surname}\n- Дата рождения: {DateOfBirth}\n- Цель: {Goal}\n- Вес (кг): {Weight}\n- Рост (см): {Weight}\n- Противопоказания: {Contraindications}\n- Есть ли опыт? {HaveExp}\n- Обхват груди (см): {Bust}\n- Обхват талии (см): {Waist}\n- Обхват живота (см): {Stomach}\n- Обхват бёдер (см): {Hips}\n- Обхват ноги (см): {Legs}";

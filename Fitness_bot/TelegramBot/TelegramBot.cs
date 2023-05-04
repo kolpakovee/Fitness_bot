@@ -1,5 +1,4 @@
 ﻿using Fitness_bot.Model.BL;
-using Fitness_bot.Model.DAL;
 using Fitness_bot.Presenter;
 using Fitness_bot.View;
 using Telegram.Bot;
@@ -18,13 +17,12 @@ static class TelegramBot
 
     static void Main()
     {
+        // TODO: не передавать его повсюду а сохранить
         var cts = new CancellationTokenSource();
         
         // TODO: создать класс инициализации и пихнуть туда
-        MessageSender messageSender = new MessageSender();
-        TelegramBotContext context = new TelegramBotContext();
-        TelegramBotModel telegramBotModel = new TelegramBotModel(messageSender, context);
-        
+        MessageSender messageSender = new MessageSender(BotClient, cts.Token);
+        TelegramBotModel telegramBotModel = new TelegramBotModel(messageSender);
         TelegramBotPresenter presenter = new TelegramBotPresenter(telegramBotModel);
         
         // Запуск бота
@@ -33,7 +31,7 @@ static class TelegramBot
             presenter.HandleUpdate,
             presenter.HandleError
         );
-        
+
         Console.ReadLine();
     }
 }

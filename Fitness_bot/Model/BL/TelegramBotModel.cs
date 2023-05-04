@@ -1,7 +1,6 @@
 using System.Text;
 using Fitness_bot.Enums;
 using Fitness_bot.Model.DAL;
-using Fitness_bot.Model.DAL.Interfaces;
 using Fitness_bot.Model.Domain;
 using Fitness_bot.Presenter;
 using Fitness_bot.View;
@@ -12,49 +11,45 @@ namespace Fitness_bot.Model.BL;
 
 public class TelegramBotModel
 {
-    private readonly IClientRepository _clientRepository;
-    private readonly ITrainerRepository _trainerRepository;
-    private readonly ITrainingRepository _trainingRepository;
+    private readonly UnitOfWork _unitOfWork;
     private readonly MessageSender _sender;
 
-    public TelegramBotModel(MessageSender sender, TelegramBotContext context)
+    public TelegramBotModel(MessageSender sender)
     {
-        _clientRepository = new ClientRepository(context);
-        _trainerRepository = new TrainerRepository(context);
-        _trainingRepository = new TrainingRepository(context);
+        _unitOfWork = new UnitOfWork();
         _sender = sender;
     }
 
     public void InputName(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        TelegramBotPresenter.Users[message.Chat.Id].Name = message.Text;
+        TelegramBotPresenter.Clients[message.Chat.Id].Name = message.Text;
         TelegramBotPresenter.Statuses[message.Chat.Id] = FormStatus.Surname;
-        _sender.SendInputMessage(botClient, message, cancellationToken, "фамилию");
+        _sender.SendInputMessage(message.Chat, "фамилию");
     }
 
     public void InputSurname(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        TelegramBotPresenter.Users[message.Chat.Id].Surname = message.Text;
+        TelegramBotPresenter.Clients[message.Chat.Id].Surname = message.Text;
         TelegramBotPresenter.Statuses[message.Chat.Id] = FormStatus.DateOfBirth;
-        _sender.SendInputMessage(botClient, message, cancellationToken, "дату рождения");
+        _sender.SendInputMessage(message.Chat, "дату рождения");
     }
 
     public void InputDateOfBirth(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        TelegramBotPresenter.Users[message.Chat.Id].DateOfBirth = message.Text;
+        TelegramBotPresenter.Clients[message.Chat.Id].DateOfBirth = message.Text;
         TelegramBotPresenter.Statuses[message.Chat.Id] = FormStatus.Goal;
-        _sender.SendInputMessage(botClient, message, cancellationToken, "цель тренировок");
+        _sender.SendInputMessage(message.Chat, "цель тренировок");
     }
 
     public void InputGoal(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        TelegramBotPresenter.Users[message.Chat.Id].Goal = message.Text;
+        TelegramBotPresenter.Clients[message.Chat.Id].Goal = message.Text;
         TelegramBotPresenter.Statuses[message.Chat.Id] = FormStatus.Weight;
-        _sender.SendInputMessage(botClient, message, cancellationToken, "вес (в кг)");
+        _sender.SendInputMessage(message.Chat, "вес (в кг)");
     }
 
     public void InputWeight(ITelegramBotClient botClient, Message message,
@@ -62,12 +57,12 @@ public class TelegramBotModel
     {
         if (int.TryParse(message.Text, out int weight))
         {
-            TelegramBotPresenter.Users[message.Chat.Id].Weight = weight;
+            TelegramBotPresenter.Clients[message.Chat.Id].Weight = weight;
             TelegramBotPresenter.Statuses[message.Chat.Id] = FormStatus.Height;
-            _sender.SendInputMessage(botClient, message, cancellationToken, "рост (в см)");
+            _sender.SendInputMessage(message.Chat, "рост (в см)");
         }
         else
-            _sender.SendFailureMessage(botClient, message, cancellationToken, "вес");
+            _sender.SendFailureMessage(message.Chat, "вес");
     }
 
     public void InputHeight(ITelegramBotClient botClient, Message message,
@@ -75,28 +70,28 @@ public class TelegramBotModel
     {
         if (int.TryParse(message.Text, out int height))
         {
-            TelegramBotPresenter.Users[message.Chat.Id].Height = height;
+            TelegramBotPresenter.Clients[message.Chat.Id].Height = height;
             TelegramBotPresenter.Statuses[message.Chat.Id] = FormStatus.Contraindications;
-            _sender.SendInputMessage(botClient, message, cancellationToken, "противопоказания");
+            _sender.SendInputMessage(message.Chat, "противопоказания");
         }
         else
-            _sender.SendFailureMessage(botClient, message, cancellationToken, "рост");
+            _sender.SendFailureMessage(message.Chat, "рост");
     }
 
     public void InputContraindications(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        TelegramBotPresenter.Users[message.Chat.Id].Contraindications = message.Text;
+        TelegramBotPresenter.Clients[message.Chat.Id].Contraindications = message.Text;
         TelegramBotPresenter.Statuses[message.Chat.Id] = FormStatus.HaveExp;
-        _sender.SendExpQuestion(botClient, message, cancellationToken);
+        _sender.SendExpQuestion(message.Chat);
     }
 
     public void InputExp(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        TelegramBotPresenter.Users[message.Chat.Id].HaveExp = message.Text;
+        TelegramBotPresenter.Clients[message.Chat.Id].HaveExp = message.Text;
         TelegramBotPresenter.Statuses[message.Chat.Id] = FormStatus.Bust;
-        _sender.SendInputMessage(botClient, message, cancellationToken, "обхват груди (в см)");
+        _sender.SendInputMessage(message.Chat, "обхват груди (в см)");
     }
 
     public void InputBust(ITelegramBotClient botClient, Message message,
@@ -104,12 +99,12 @@ public class TelegramBotModel
     {
         if (int.TryParse(message.Text, out int bust))
         {
-            TelegramBotPresenter.Users[message.Chat.Id].Bust = bust;
+            TelegramBotPresenter.Clients[message.Chat.Id].Bust = bust;
             TelegramBotPresenter.Statuses[message.Chat.Id] = FormStatus.Waist;
-            _sender.SendInputMessage(botClient, message, cancellationToken, "обхват талии (в см)");
+            _sender.SendInputMessage(message.Chat, "обхват талии (в см)");
         }
         else
-            _sender.SendFailureMessage(botClient, message, cancellationToken, "обхват груди");
+            _sender.SendFailureMessage(message.Chat, "обхват груди");
     }
 
     public void InputWaist(ITelegramBotClient botClient, Message message,
@@ -117,12 +112,12 @@ public class TelegramBotModel
     {
         if (int.TryParse(message.Text, out int waist))
         {
-            TelegramBotPresenter.Users[message.Chat.Id].Waist = waist;
+            TelegramBotPresenter.Clients[message.Chat.Id].Waist = waist;
             TelegramBotPresenter.Statuses[message.Chat.Id] = FormStatus.Stomach;
-            _sender.SendInputMessage(botClient, message, cancellationToken, "обхват живота (в см)");
+            _sender.SendInputMessage(message.Chat, "обхват живота (в см)");
         }
         else
-            _sender.SendFailureMessage(botClient, message, cancellationToken, "обхват талии");
+            _sender.SendFailureMessage(message.Chat, "обхват талии");
     }
 
     public void InputStomach(ITelegramBotClient botClient, Message message,
@@ -130,12 +125,12 @@ public class TelegramBotModel
     {
         if (int.TryParse(message.Text, out int stomach))
         {
-            TelegramBotPresenter.Users[message.Chat.Id].Stomach = stomach;
+            TelegramBotPresenter.Clients[message.Chat.Id].Stomach = stomach;
             TelegramBotPresenter.Statuses[message.Chat.Id] = FormStatus.Hips;
-            _sender.SendInputMessage(botClient, message, cancellationToken, "обхват бёдер (в см)");
+            _sender.SendInputMessage(message.Chat, "обхват бёдер (в см)");
         }
         else
-            _sender.SendFailureMessage(botClient, message, cancellationToken, "обхват живота");
+            _sender.SendFailureMessage(message.Chat, "обхват живота (в см)");
     }
 
     public void InputHips(ITelegramBotClient botClient, Message message,
@@ -143,12 +138,12 @@ public class TelegramBotModel
     {
         if (int.TryParse(message.Text, out int hips))
         {
-            TelegramBotPresenter.Users[message.Chat.Id].Hips = hips;
+            TelegramBotPresenter.Clients[message.Chat.Id].Hips = hips;
             TelegramBotPresenter.Statuses[message.Chat.Id] = FormStatus.Legs;
-            _sender.SendInputMessage(botClient, message, cancellationToken, "обхват ноги (в см)");
+            _sender.SendInputMessage(message.Chat, "обхват ноги (в см)");
         }
         else
-            _sender.SendFailureMessage(botClient, message, cancellationToken, "обхват бёдер");
+            _sender.SendFailureMessage(message.Chat, "обхват бёдер");
     }
 
     public void InputLegs(ITelegramBotClient botClient, Message message,
@@ -156,18 +151,19 @@ public class TelegramBotModel
     {
         if (int.TryParse(message.Text, out int legs))
         {
-            TelegramBotPresenter.Users[message.Chat.Id].Legs = legs;
+            TelegramBotPresenter.Clients[message.Chat.Id].Legs = legs;
 
-            _clientRepository.UpdateClient(TelegramBotPresenter.Users[message.Chat.Id]);
+            _unitOfWork.Clients.Update(TelegramBotPresenter.Clients[message.Chat.Id]);
+            _unitOfWork.SaveChanges();
 
             // Очищаем из памяти, чтобы не засорять
-            TelegramBotPresenter.Users.Remove(message.Chat.Id);
+            TelegramBotPresenter.Clients.Remove(message.Chat.Id);
             TelegramBotPresenter.Statuses.Remove(message.Chat.Id);
 
-            _sender.SendFormFinish(botClient, message, cancellationToken);
+            _sender.SendFormFinish(message.Chat);
         }
         else
-            _sender.SendFailureMessage(botClient, message, cancellationToken, "обхват ноги");
+            _sender.SendFailureMessage(message.Chat, "обхват ноги");
     }
 
     public void AddClientUsername(ITelegramBotClient botClient, Message message,
@@ -177,9 +173,10 @@ public class TelegramBotModel
 
         Client client = new Client(message.Text, message.Chat.Id);
 
-        _clientRepository.AddClient(client);
+        _unitOfWork.Clients.Add(client);
+        _unitOfWork.SaveChanges();
 
-        _sender.SendAddClientMes(botClient, message, cancellationToken);
+        _sender.SendAddClientMes(message.Chat);
 
         TelegramBotPresenter.TrainersActions.Remove(message.Chat.Id);
     }
@@ -189,9 +186,10 @@ public class TelegramBotModel
     {
         if (message.Text == null) return;
 
-        _clientRepository.DeleteClientByUsername(message.Text);
+        _unitOfWork.Clients.Delete(new Client(message.Text));
+        _unitOfWork.SaveChanges();
 
-        _sender.SendDeleteClientMes(botClient, message, cancellationToken);
+        _sender.SendDeleteClientMes(message.Chat);
 
         TelegramBotPresenter.TrainersActions.Remove(message.Chat.Id);
     }
@@ -206,10 +204,10 @@ public class TelegramBotModel
             TelegramBotPresenter.Trainings.Add(message.Chat.Id, training);
             TelegramBotPresenter.TrainersActions[message.Chat.Id] = ActionStatus.AddTrainingLocation;
 
-            _sender.SendInputMessage(botClient, message, cancellationToken, "адрес места проведения тренировки");
+            _sender.SendInputMessage(message.Chat, "адрес места проведения тренировки");
         }
         else
-            _sender.SendFailureMessage(botClient, message, cancellationToken, "дату");
+            _sender.SendFailureMessage(message.Chat, "дату");
     }
 
     public void AddTrainingLocation(ITelegramBotClient botClient, Message message,
@@ -218,7 +216,7 @@ public class TelegramBotModel
         TelegramBotPresenter.Trainings[message.Chat.Id].Location = message.Text;
         TelegramBotPresenter.TrainersActions[message.Chat.Id] = ActionStatus.AddClientForTraining;
 
-        _sender.SendAddWindowMes(botClient, message, cancellationToken);
+        _sender.SendAddWindowMes(message.Chat);
     }
 
     public void AddClientForTraining(ITelegramBotClient botClient, Message message,
@@ -226,64 +224,70 @@ public class TelegramBotModel
     {
         TelegramBotPresenter.Trainings[message.Chat.Id].ClientUsername = message.Text;
 
-        _trainingRepository.AddTraining(TelegramBotPresenter.Trainings[message.Chat.Id]);
+        _unitOfWork.Trainings.Add(TelegramBotPresenter.Trainings[message.Chat.Id]);
+        _unitOfWork.SaveChanges();
 
         TelegramBotPresenter.Trainings.Remove(message.Chat.Id);
         TelegramBotPresenter.TrainersActions.Remove(message.Chat.Id);
 
-        _sender.SendAddTrainingMes(botClient, message, cancellationToken);
+        _sender.SendAddTrainingMes(message);
     }
 
     public void DeleteTrainingByTime(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
         if (DateTime.TryParseExact(message.Text, "dd.MM.yyyy HH:mm", null,
-                System.Globalization.DateTimeStyles.None, out DateTime dateTime))
+                System.Globalization.DateTimeStyles.None, out DateTime time))
         {
-            _trainingRepository.DeleteTrainingByDateTime(dateTime);
+            _unitOfWork.Trainings.Delete(new Training(time));
+            _unitOfWork.SaveChanges();
+            
             TelegramBotPresenter.TrainersActions.Remove(message.Chat.Id);
 
-            _sender.SendDeleteTrainingMes(botClient, message, cancellationToken);
+            _sender.SendDeleteTrainingMes(message.Chat);
         }
         else
-            _sender.SendFailureMessage(botClient, message, cancellationToken, "дату");
+            _sender.SendFailureMessage(message.Chat, "дату");
     }
 
     public void TrainerTimetable(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        _sender.SendTrainerMenu(botClient, message, cancellationToken, MenuButtons.TrainerTimetableMenu());
+        _sender.SendMenuMessage(message.Chat, MenuButtons.TrainerTimetableMenu());
     }
 
     public void TrainerClients(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        _sender.SendTrainerMenu(botClient, message, cancellationToken, MenuButtons.TrainerClientsMenu());
+        _sender.SendMenuMessage(message.Chat, MenuButtons.TrainerClientsMenu());
     }
 
     public void AddTraining(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        _sender.SendAddOrDeleteTrainingMes(botClient, message, cancellationToken, "добавить");
+        _sender.SendAddOrDeleteTrainingMes(message.Chat, "добавить");
         TelegramBotPresenter.TrainersActions.Add(message.Chat.Id, ActionStatus.AddTrainingDate);
     }
 
     public void CancelTraining(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        _sender.SendAddOrDeleteTrainingMes(botClient, message, cancellationToken, "удалить");
+        _sender.SendAddOrDeleteTrainingMes(message.Chat, "удалить");
         TelegramBotPresenter.TrainersActions.Add(message.Chat.Id, ActionStatus.DeleteTrainingByTime);
     }
 
     public void WeekTrainerTimetable(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        List<Training> trainings = _trainingRepository.GetTrainingsByTrainerId(message.Chat.Id);
+        var trainings = _unitOfWork.Trainings
+            .GetAll()
+            .Where(t => t.TrainerId == message.Chat.Id);
+
         DateTime now = DateTime.Now;
 
-        List<Training> trainingsIn7Days =
-            trainings.Where(t => (t.Time >= now) && (t.Time <= now.AddDays(7)) && (t.ClientUsername != "окно"))
-                .ToList();
+        List<Training> trainingsIn7Days = trainings
+            .Where(t => (t.Time >= now) && (t.Time <= now.AddDays(7)) && (t.ClientUsername != "окно"))
+            .ToList();
 
         var groupedTrainings = trainingsIn7Days.GroupBy(t => t.Time.DayOfWeek);
 
@@ -297,38 +301,43 @@ public class TelegramBotModel
                 timetable.Append(t).Append("\n\n");
         }
 
-        String text = timetable.Length == 0 ? "Тренировок на ближайшие 7 дней нет :)" : timetable.ToString();
-        
-        _sender.SendTextMessage(botClient, message, cancellationToken, text);
+        String text = timetable.Length == 0
+            ? "Тренировок на ближайшие 7 дней не запланировано :)"
+            : timetable.ToString();
+
+        _sender.SendTextMessage(message.Chat, text);
     }
 
     public void AddClient(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        _sender.SendAddOrDeleteClientMes(botClient, message, cancellationToken, "добавить");
+        _sender.SendAddOrDeleteClientMes(message.Chat, "добавить");
         TelegramBotPresenter.TrainersActions.Add(message.Chat.Id, ActionStatus.AddClientUsername);
     }
 
     public void DeleteClient(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        _sender.SendAddOrDeleteClientMes(botClient, message, cancellationToken, "удалить");
+        _sender.SendAddOrDeleteClientMes(message.Chat, "удалить");
         TelegramBotPresenter.TrainersActions.Add(message.Chat.Id, ActionStatus.DeleteClientByUsername);
     }
 
     public void CheckBase(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        List<Client> users = _clientRepository.GetAllClientsByTrainerId(message.Chat.Id);
+        var clients = _unitOfWork.Clients
+            .GetAll()
+            .Where(cl => cl.TrainerId == message.Chat.Id)
+            .ToList();
 
         StringBuilder sb = new StringBuilder();
 
-        for (int i = 0; i < users.Count; i++)
-            sb.Append(i + 1).Append(") ").Append(users[i]).Append("\n\n");
+        foreach (var client in clients)
+            sb.Append(client).Append("\n\n");
 
         String text = sb.Length == 0 ? "Пока клиентов в базе нет :)" : sb.ToString();
 
-        _sender.SendTextMessage(botClient, message, cancellationToken, text);
+        _sender.SendTextMessage(message.Chat, text);
     }
 
     public void TrainerRegistration(ITelegramBotClient botClient, Message message,
@@ -336,52 +345,59 @@ public class TelegramBotModel
     {
         if (message.Chat.Username == null) return;
 
-        _trainerRepository.AddTrainer(new Trainer(message.Chat.Id, message.Chat.Username));
-        _sender.SendTrainerInstructionMes(botClient, message, cancellationToken);
+        _unitOfWork.Trainers.Add(new Trainer(message.Chat.Id, message.Chat.Username));
+        _unitOfWork.SaveChanges();
+        
+        _sender.SendTrainerInstructionMes(message.Chat);
     }
 
     public void RejectNewUser(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        _sender.SendRejectClientMes(botClient, message, cancellationToken);
+        _sender.SendRejectClientMes(message.Chat);
     }
 
     public void HandleMessageDateBase(ITelegramBotClient botClient, Message message,
         CancellationToken cancellationToken)
     {
-        long id = message.Chat.Id;
-
         // Проверяем, тренер ли это
-        Trainer? trainer = _trainerRepository.GetTrainerById(id);
+        Trainer? trainer = _unitOfWork.Trainers
+            .GetAll()
+            .FirstOrDefault(t => t.Id == message.Chat.Id);
 
         if (trainer != null) // пришёл зарегистрированный тренер
         {
-            _sender.SendTrainerMenu(botClient, message, cancellationToken, MenuButtons.TrainerMenu());
+            _sender.SendMenuMessage(message.Chat, MenuButtons.TrainerMenu());
             return;
         }
 
         if (message.Chat.Username != null)
         {
-            Client? client = _clientRepository.GetClientByUsername(message.Chat.Username);
-
+            Client? client = _unitOfWork.Clients
+                .GetAll()
+                .FirstOrDefault(cl => cl.Identifier == message.Chat.Username);
+            
             // Если в БД нет такого пользователя
             if (client == null)
             {
-                _sender.SendQuestion(botClient, message, cancellationToken);
+                _sender.SendQuestion(message.Chat);
                 return;
             }
 
-            // Если в БД есть такой пользователь
+            // Если в БД есть такой пользователь и он не прошёл форму
             if (!client.FinishedForm())
             {
-                _sender.SendFormStart(botClient, message, cancellationToken);
+                _sender.SendFormStart(message.Chat);
 
                 TelegramBotPresenter.Statuses.Add(message.Chat.Id, FormStatus.Name);
                 client.Id = message.Chat.Id;
-                TelegramBotPresenter.Users.Add(message.Chat.Id, client);
+                TelegramBotPresenter.Clients.Add(message.Chat.Id, client);
 
-                _sender.SendInputMessage(botClient, message, cancellationToken, "имя");
+                _sender.SendInputMessage(message.Chat, "имя");
+                return;
             }
+
+            _sender.SendMenuMessage(message.Chat, MenuButtons.ClientMenu());
         }
     }
 }

@@ -2,15 +2,15 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Fitness_bot.Model.Domain;
 
-public class Trainer
+public class Trainer : IDomainObject
 {
-    public string Username { get; set; }
     [Key]
+    public string Identifier { get; set; }
     public long Id { get; set; }
 
-    public Trainer(long id, string username)
+    public Trainer(long id, string identifier)
     {
-        Username = username;
+        Identifier = identifier;
         Id = id;
     }
 }
