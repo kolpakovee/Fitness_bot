@@ -44,7 +44,7 @@ public class TelegramBotLogic
 
             case IdentificationStatus.PartRegisteredClient:
                 _sender.SendFormStart(message.Chat);
-                Client.Statuses.Add(message.Chat.Id, FormStatus.Name);
+                Client.Statuses.Add(message.Chat.Id, ClientActionStatus.AddName);
                 Client client = _unitOfWork.Clients
                                     .GetAll()
                                     .FirstOrDefault(cl => cl.Identifier == message.Chat.Username) ??

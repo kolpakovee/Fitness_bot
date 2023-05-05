@@ -1,6 +1,6 @@
 namespace Fitness_bot.Enums;
 
-public enum ActionStatus
+public enum TrainerActionStatus
 {
     AddClientUsername,
     DeleteClientByUsername,

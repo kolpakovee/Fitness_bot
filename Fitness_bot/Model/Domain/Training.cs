@@ -7,39 +7,35 @@ public class Training : IDomainObject
 {
     [Key]
     public string Identifier { get; set; }
-    public DateTime Time { get; set; }
     public long TrainerId { get; set; }
     public string? ClientUsername { get; set; }
     public string? Location { get; set; }
 
-    public Training(DateTime time)
+    public Training(string identifier)
     {
-        Identifier = time.ToString("dd.MM.yyyy HH:mm");
+        Identifier = identifier;
     }
 
-    public Training(DateTime time, long trainerId)
+    public Training(string identifier, long trainerId)
     {
-        Time = time;
         TrainerId = trainerId;
-        Identifier = time.ToString("dd.MM.yyyy HH:mm");
+        Identifier = identifier;
     }
 
-    public Training(DateTime time, long trainerId, string? clientUsername, string location)
+    public Training(string identifier, long trainerId, string? clientUsername, string location)
     {
-        Time = time;
         TrainerId = trainerId;
         ClientUsername = clientUsername;
         Location = location;
-        Identifier = time.ToString("dd.MM.yyyy HH:mm");
+        Identifier = identifier;
     }
 
-    public Training(DateTime time, long trainerId, string location)
+    public Training(string identifier, long trainerId, string location)
     {
-        Time = time;
         TrainerId = trainerId;
         Location = location;
-        Identifier = time.ToString("dd.MM.yyyy HH:mm");
+        Identifier = identifier;
     }
 
-    public override string ToString() => $"⌚ {Time:HH:mm}\n📍 {Location}";
+    public override string ToString() => $"⌚ {Identifier}\n📍 {Location}";
 }

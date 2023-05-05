@@ -1,6 +1,5 @@
 using Fitness_bot.Enums;
 using Fitness_bot.Model.BLL;
-using Fitness_bot.Model.Domain;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -68,56 +67,60 @@ public class TelegramBotPresenter
     {
         switch (_logic.Client.Statuses[message.Chat.Id])
         {
-            case FormStatus.Name:
+            case ClientActionStatus.AddName:
                 _logic.Client.InputName(message);
                 break;
 
-            case FormStatus.Surname:
+            case ClientActionStatus.AddSurname:
                 _logic.Client.InputSurname(message);
                 break;
 
-            case FormStatus.DateOfBirth:
+            case ClientActionStatus.AddDateOfBirth:
                 _logic.Client.InputDateOfBirth(message);
                 break;
 
-            case FormStatus.Goal:
+            case ClientActionStatus.AddGoal:
                 _logic.Client.InputGoal(message);
                 break;
 
-            case FormStatus.Weight:
+            case ClientActionStatus.AddWeight:
                 _logic.Client.InputWeight(message);
                 break;
 
-            case FormStatus.Height:
+            case ClientActionStatus.AddHeight:
                 _logic.Client.InputHeight(message);
                 break;
 
-            case FormStatus.Contraindications:
+            case ClientActionStatus.AddContraindications:
                 _logic.Client.InputContraindications(message);
                 break;
 
-            case FormStatus.HaveExp:
+            case ClientActionStatus.AddExp:
                 _logic.Client.InputExp(message);
                 break;
 
-            case FormStatus.Bust:
+            case ClientActionStatus.AddBust:
                 _logic.Client.InputBust(message);
                 break;
 
-            case FormStatus.Waist:
+            case ClientActionStatus.AddWaist:
                 _logic.Client.InputWaist(message);
                 break;
 
-            case FormStatus.Stomach:
+            case ClientActionStatus.AddStomach:
                 _logic.Client.InputStomach(message);
                 break;
 
-            case FormStatus.Hips:
+            case ClientActionStatus.AddHips:
                 _logic.Client.InputHips(message);
                 break;
 
-            case FormStatus.Legs:
+            case ClientActionStatus.AddLegs:
                 _logic.Client.InputLegs(message);
+                break;
+            
+            case ClientActionStatus.AddTraining:
+                _logic.Client.FinishRecordTraining(message);
                 break;
         }
     }
@@ -127,27 +130,27 @@ public class TelegramBotPresenter
     {
         switch (_logic.Trainer.Statuses[message.Chat.Id])
         {
-            case ActionStatus.AddClientUsername:
+            case TrainerActionStatus.AddClientUsername:
                 _logic.Trainer.AddClientByUsername(message);
                 break;
 
-            case ActionStatus.DeleteClientByUsername:
+            case TrainerActionStatus.DeleteClientByUsername:
                 _logic.Trainer.DeleteClientByUsername(message);
                 break;
 
-            case ActionStatus.AddTrainingDate:
+            case TrainerActionStatus.AddTrainingDate:
                 _logic.Trainer.AddTrainingDate(message);
                 break;
 
-            case ActionStatus.AddTrainingLocation:
+            case TrainerActionStatus.AddTrainingLocation:
                 _logic.Trainer.AddTrainingLocation(message);
                 break;
 
-            case ActionStatus.AddClientForTraining:
+            case TrainerActionStatus.AddClientForTraining:
                 _logic.Trainer.AddClientForTraining(message);
                 break;
 
-            case ActionStatus.DeleteTrainingByTime:
+            case TrainerActionStatus.DeleteTrainingByTime:
                 _logic.Trainer.DeleteTrainingByTime(message);
                 break;
         }
@@ -164,7 +167,7 @@ public class TelegramBotPresenter
         switch (update.CallbackQuery?.Data)
         {
             case "t_timetable":
-                _logic.Trainer.TrainerTimetable(queryMessage);
+                _logic.Trainer.Timetable(queryMessage);
                 break;
 
             case "clients":
@@ -196,9 +199,23 @@ public class TelegramBotPresenter
                 break;
 
             case "cl_timetable":
+                _logic.Client.Timetable(queryMessage);
+                break;
+            
+            case "cl_trainings":
+                _logic.Client.Trainings(queryMessage);
+                break;
+            
+            case "cl_record":
+                _logic.Client.StartRecordTraining(queryMessage);
+                break;
+            
+            case "cl_cancel":
+                _logic.Client.CancelTraining(queryMessage);
                 break;
 
             case "cl_form":
+                // отправить клиенту форму и дать возможность редактировать
                 break;
 
             case "i_am_trainer": // пришёл новый тренер

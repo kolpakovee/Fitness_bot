@@ -91,7 +91,7 @@ public class MessageSender
     public async void SendAddTrainingMes(Message message)
     {
         await _botClient.SendTextMessageAsync(message.Chat,
-            message.Text == "окно" ? "Окно для тренировок успешно добавлено." : "Тренировка успешно добавлена.",
+            message.Text!.ToLower() == "окно" ? "Окно для тренировок успешно добавлено." : "Тренировка успешно добавлена.",
             cancellationToken: _cancellationToken);
     }
 

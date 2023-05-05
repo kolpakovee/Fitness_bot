@@ -5,9 +5,9 @@ using Telegram.Bot;
 
 namespace Fitness_bot.TelegramBot;
 
-// TODO: пофиксить ПРОСМОТР БАЗЫ тренера (когда клиент не прошёл анкету)
 // TODO: написать комментарии со всеми входными параметрами
 // TODO: сделать логгер
+// TODO: убрать заморозку из ТЗ!!!!!!!!!
 
 static class TelegramBot
 {
@@ -17,7 +17,6 @@ static class TelegramBot
 
     static void Main()
     {
-        // TODO: не передавать его повсюду а сохранить
         var cts = new CancellationTokenSource();
         
         // TODO: создать класс инициализации и пихнуть туда

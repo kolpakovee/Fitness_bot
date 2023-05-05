@@ -123,4 +123,24 @@ public static class MenuButtons
         });
         return inlineKeyboard;
     }
+    
+    public static InlineKeyboardMarkup ClientTrainingMenu()
+    {
+        InlineKeyboardMarkup inlineKeyboard = new(new[]
+        {
+            new[]
+            {
+                InlineKeyboardButton.WithCallbackData(
+                    "Записаться на тренировку",
+                    "cl_record")
+            },
+            new[]
+            {
+                InlineKeyboardButton.WithCallbackData(
+                    "Отменить тренировку",
+                    "cl_cancel")
+            }
+        });
+        return inlineKeyboard;
+    }
 }
