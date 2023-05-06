@@ -16,5 +16,5 @@ public enum ClientActionStatus
     AddHips,
     AddLegs,
     AddTraining,
-    
+    EditForm
 }

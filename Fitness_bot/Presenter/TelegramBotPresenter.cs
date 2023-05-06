@@ -122,6 +122,10 @@ public class TelegramBotPresenter
             case ClientActionStatus.AddTraining:
                 _logic.Client.FinishRecordTraining(message);
                 break;
+            
+            case ClientActionStatus.EditForm:
+                _logic.Client.FinishEditForm(message);
+                break;
         }
     }
 
@@ -215,10 +219,10 @@ public class TelegramBotPresenter
                 break;
 
             case "cl_form":
-                // отправить клиенту форму и дать возможность редактировать
+                _logic.Client.StartEditForm(queryMessage);
                 break;
 
-            case "i_am_trainer": // пришёл новый тренер
+            case "i_am_trainer":
                 _logic.Trainer.TrainerRegistration(queryMessage);
                 break;
 

@@ -126,8 +126,15 @@ public class MessageSender
     public async void SendTrainerInstructionMes(Chat chat)
     {
         await _botClient.SendTextMessageAsync(chat,
-            "Инструкция для тренера (написать)",
+            "Инстукция для тренера",
             replyMarkup: MenuButtons.TrainerMenu(),
+            cancellationToken: _cancellationToken);
+    }
+
+    public async void SendClientInstructionMes(Chat chat)
+    {
+        await _botClient.SendTextMessageAsync(chat,
+            "Инструкция для клиента",
             cancellationToken: _cancellationToken);
     }
 
@@ -142,6 +149,14 @@ public class MessageSender
     {
         await _botClient.SendTextMessageAsync(chat,
             "Извините, но я не могу определить ваше имя пользователя в Telegram, чтобы идентифицировать :(",
+            cancellationToken: _cancellationToken);
+    }
+
+    public async void SendEditFormMes(Chat chat)
+    {
+        await _botClient.SendTextMessageAsync(chat,
+            "Введите номер пункта, который вы хотите редактировать и новое значение.\n" +
+            "Например, если вы хотите изменить вес на 75 кг, введите '3 75'",
             cancellationToken: _cancellationToken);
     }
 }

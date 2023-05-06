@@ -43,6 +43,7 @@ public class TelegramBotLogic
                 break;
 
             case IdentificationStatus.PartRegisteredClient:
+                _sender.SendClientInstructionMes(message.Chat);
                 _sender.SendFormStart(message.Chat);
                 Client.Statuses.Add(message.Chat.Id, ClientActionStatus.AddName);
                 Client client = _unitOfWork.Clients

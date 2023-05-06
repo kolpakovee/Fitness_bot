@@ -25,29 +25,37 @@ public class ClientLogic
 
     public void InputName(Message message)
     {
-        Clients[message.Chat.Id].Name = message.Text;
-        Statuses[message.Chat.Id] = ClientActionStatus.AddSurname;
+        if (Clients.ContainsKey(message.Chat.Id))
+            Clients[message.Chat.Id].Name = message.Text;
+        if (Statuses.ContainsKey(message.Chat.Id))
+            Statuses[message.Chat.Id] = ClientActionStatus.AddSurname;
         _sender.SendInputMessage(message.Chat, "фамилию");
     }
 
     public void InputSurname(Message message)
     {
-        Clients[message.Chat.Id].Surname = message.Text;
-        Statuses[message.Chat.Id] = ClientActionStatus.AddDateOfBirth;
+        if (Clients.ContainsKey(message.Chat.Id))
+            Clients[message.Chat.Id].Surname = message.Text;
+        if (Statuses.ContainsKey(message.Chat.Id))
+            Statuses[message.Chat.Id] = ClientActionStatus.AddDateOfBirth;
         _sender.SendInputMessage(message.Chat, "дату рождения");
     }
 
     public void InputDateOfBirth(Message message)
     {
-        Clients[message.Chat.Id].DateOfBirth = message.Text;
-        Statuses[message.Chat.Id] = ClientActionStatus.AddGoal;
+        if (Clients.ContainsKey(message.Chat.Id))
+            Clients[message.Chat.Id].DateOfBirth = message.Text;
+        if (Statuses.ContainsKey(message.Chat.Id))
+            Statuses[message.Chat.Id] = ClientActionStatus.AddGoal;
         _sender.SendInputMessage(message.Chat, "цель тренировок");
     }
 
     public void InputGoal(Message message)
     {
-        Clients[message.Chat.Id].Goal = message.Text;
-        Statuses[message.Chat.Id] = ClientActionStatus.AddWeight;
+        if (Clients.ContainsKey(message.Chat.Id))
+            Clients[message.Chat.Id].Goal = message.Text;
+        if (Statuses.ContainsKey(message.Chat.Id))
+            Statuses[message.Chat.Id] = ClientActionStatus.AddWeight;
         _sender.SendInputMessage(message.Chat, "вес (в кг)");
     }
 
@@ -55,8 +63,10 @@ public class ClientLogic
     {
         if (int.TryParse(message.Text, out int weight))
         {
-            Clients[message.Chat.Id].Weight = weight;
-            Statuses[message.Chat.Id] = ClientActionStatus.AddHeight;
+            if (Clients.ContainsKey(message.Chat.Id))
+                Clients[message.Chat.Id].Weight = weight;
+            if (Statuses.ContainsKey(message.Chat.Id))
+                Statuses[message.Chat.Id] = ClientActionStatus.AddHeight;
             _sender.SendInputMessage(message.Chat, "рост (в см)");
         }
         else
@@ -67,8 +77,10 @@ public class ClientLogic
     {
         if (int.TryParse(message.Text, out int height))
         {
-            Clients[message.Chat.Id].Height = height;
-            Statuses[message.Chat.Id] = ClientActionStatus.AddContraindications;
+            if (Clients.ContainsKey(message.Chat.Id))
+                Clients[message.Chat.Id].Height = height;
+            if (Statuses.ContainsKey(message.Chat.Id))
+                Statuses[message.Chat.Id] = ClientActionStatus.AddContraindications;
             _sender.SendInputMessage(message.Chat, "противопоказания");
         }
         else
@@ -77,15 +89,19 @@ public class ClientLogic
 
     public void InputContraindications(Message message)
     {
-        Clients[message.Chat.Id].Contraindications = message.Text;
-        Statuses[message.Chat.Id] = ClientActionStatus.AddExp;
+        if (Clients.ContainsKey(message.Chat.Id))
+            Clients[message.Chat.Id].Contraindications = message.Text;
+        if (Statuses.ContainsKey(message.Chat.Id))
+            Statuses[message.Chat.Id] = ClientActionStatus.AddExp;
         _sender.SendExpQuestion(message.Chat);
     }
 
     public void InputExp(Message message)
     {
-        Clients[message.Chat.Id].HaveExp = message.Text;
-        Statuses[message.Chat.Id] = ClientActionStatus.AddBust;
+        if (Clients.ContainsKey(message.Chat.Id))
+            Clients[message.Chat.Id].HaveExp = message.Text;
+        if (Statuses.ContainsKey(message.Chat.Id))
+            Statuses[message.Chat.Id] = ClientActionStatus.AddBust;
         _sender.SendInputMessage(message.Chat, "обхват груди (в см)");
     }
 
@@ -93,8 +109,10 @@ public class ClientLogic
     {
         if (int.TryParse(message.Text, out int bust))
         {
-            Clients[message.Chat.Id].Bust = bust;
-            Statuses[message.Chat.Id] = ClientActionStatus.AddWaist;
+            if (Clients.ContainsKey(message.Chat.Id))
+                Clients[message.Chat.Id].Bust = bust;
+            if (Statuses.ContainsKey(message.Chat.Id))
+                Statuses[message.Chat.Id] = ClientActionStatus.AddWaist;
             _sender.SendInputMessage(message.Chat, "обхват талии (в см)");
         }
         else
@@ -105,8 +123,10 @@ public class ClientLogic
     {
         if (int.TryParse(message.Text, out int waist))
         {
-            Clients[message.Chat.Id].Waist = waist;
-            Statuses[message.Chat.Id] = ClientActionStatus.AddStomach;
+            if (Clients.ContainsKey(message.Chat.Id))
+                Clients[message.Chat.Id].Waist = waist;
+            if (Statuses.ContainsKey(message.Chat.Id))
+                Statuses[message.Chat.Id] = ClientActionStatus.AddStomach;
             _sender.SendInputMessage(message.Chat, "обхват живота (в см)");
         }
         else
@@ -117,8 +137,10 @@ public class ClientLogic
     {
         if (int.TryParse(message.Text, out int stomach))
         {
-            Clients[message.Chat.Id].Stomach = stomach;
-            Statuses[message.Chat.Id] = ClientActionStatus.AddHips;
+            if (Clients.ContainsKey(message.Chat.Id))
+                Clients[message.Chat.Id].Stomach = stomach;
+            if (Statuses.ContainsKey(message.Chat.Id))
+                Statuses[message.Chat.Id] = ClientActionStatus.AddHips;
             _sender.SendInputMessage(message.Chat, "обхват бёдер (в см)");
         }
         else
@@ -129,8 +151,10 @@ public class ClientLogic
     {
         if (int.TryParse(message.Text, out int hips))
         {
-            Clients[message.Chat.Id].Hips = hips;
-            Statuses[message.Chat.Id] = ClientActionStatus.AddLegs;
+            if (Clients.ContainsKey(message.Chat.Id))
+                Clients[message.Chat.Id].Hips = hips;
+            if (Statuses.ContainsKey(message.Chat.Id))
+                Statuses[message.Chat.Id] = ClientActionStatus.AddLegs;
             _sender.SendInputMessage(message.Chat, "обхват ноги (в см)");
         }
         else
@@ -141,14 +165,16 @@ public class ClientLogic
     {
         if (int.TryParse(message.Text, out int legs))
         {
-            Clients[message.Chat.Id].Legs = legs;
+            if (Clients.ContainsKey(message.Chat.Id))
+                Clients[message.Chat.Id].Legs = legs;
 
             _unitOfWork.Clients.Update(Clients[message.Chat.Id]);
             _unitOfWork.SaveChanges();
 
             // Очищаем из памяти, чтобы не засорять
             Clients.Remove(message.Chat.Id);
-            Statuses.Remove(message.Chat.Id);
+            if (Statuses.ContainsKey(message.Chat.Id))
+                Statuses.Remove(message.Chat.Id);
 
             _sender.SendFormFinish(message.Chat);
         }
@@ -160,10 +186,13 @@ public class ClientLogic
     {
         DateTime now = DateTime.Now;
 
+        Client client = _unitOfWork.Clients.GetAll().FirstOrDefault(c => c.Identifier == message.Chat.Username)!;
+
         List<Training> trainingsIn7Days = _unitOfWork.Trainings
             .GetAll()
             .Where(t => t.ClientUsername == message.Chat.Username && DateTime.Parse(t.Identifier) >= now &&
-                        DateTime.Parse(t.Identifier) <= now.AddDays(7))
+                        DateTime.Parse(t.Identifier) <= now.AddDays(7) && client.TrainerId == t.TrainerId)
+            .OrderBy(t => DateTime.Parse(t.Identifier))
             .ToList();
 
         var groupedTrainings = trainingsIn7Days.GroupBy(t => DateTime.Parse(t.Identifier).DayOfWeek);
@@ -187,7 +216,8 @@ public class ClientLogic
 
     public void StartRecordTraining(Message message)
     {
-        Statuses.Add(message.Chat.Id, ClientActionStatus.AddTraining);
+        if (!Statuses.ContainsKey(message.Chat.Id))
+            Statuses.Add(message.Chat.Id, ClientActionStatus.AddTraining);
 
         DateTime now = DateTime.Now;
 
@@ -214,7 +244,8 @@ public class ClientLogic
         if (timetable.Length == 0)
         {
             _sender.SendTextMessage(message.Chat, "Окон на ближайщую неделю нет :(");
-            Statuses.Remove(message.Chat.Id);
+            if (Statuses.ContainsKey(message.Chat.Id))
+                Statuses.Remove(message.Chat.Id);
             return;
         }
 
@@ -232,7 +263,8 @@ public class ClientLogic
                 .GetAll()
                 .FirstOrDefault(t => t.Identifier == dt.ToString("dd.MM.yyyy HH:mm"));
 
-            Statuses.Remove(message.Chat.Id);
+            if (Statuses.ContainsKey(message.Chat.Id))
+                Statuses.Remove(message.Chat.Id);
 
             if (training != null)
             {
@@ -275,5 +307,144 @@ public class ClientLogic
         }
 
         _sender.SendTextMessage(message.Chat, "Невозможно отменить тренировку, напишите тренеру лично");
+    }
+
+    public void StartEditForm(Message message)
+    {
+        var client = _unitOfWork.Clients
+            .GetAll()
+            .FirstOrDefault(cl => cl.Identifier == message.Chat.Username);
+
+        _sender.SendTextMessage(message.Chat, client!.ToString());
+
+        if (!Statuses.ContainsKey(message.Chat.Id))
+        {
+            Statuses.Add(message.Chat.Id, ClientActionStatus.EditForm);
+            _sender.SendEditFormMes(message.Chat);
+        }
+        else
+            _sender.SendTextMessage(message.Chat, "Невозможно редактировать форму!");
+    }
+
+    public void FinishEditForm(Message message)
+    {
+        if (message.Text == null) return;
+
+        Client? client = _unitOfWork.Clients.GetAll().FirstOrDefault(c => c.Identifier == message.Chat.Username);
+
+        if (client == null) return;
+
+        var arr = message.Text.Split(' ');
+        StringBuilder otherStr = new StringBuilder();
+        for (int i = 1; i < arr.Length; i++)
+            otherStr.Append(arr[i]).Append(' ');
+
+        switch (arr[0])
+        {
+            case "1":
+                client.DateOfBirth = otherStr.ToString();
+                _unitOfWork.SaveChanges();
+                break;
+
+            case "2":
+                client.Goal = otherStr.ToString();
+                _unitOfWork.SaveChanges();
+                break;
+
+            case "3":
+                if (int.TryParse(otherStr.ToString(), out int w))
+                {
+                    client.Weight = w;
+                    _unitOfWork.SaveChanges();
+                }
+                else
+                    _sender.SendFailureMessage(message.Chat, "вес");
+
+                break;
+
+            case "4":
+                if (int.TryParse(otherStr.ToString(), out int h))
+                {
+                    client.Height = h;
+                    _unitOfWork.SaveChanges();
+                }
+                else
+                    _sender.SendFailureMessage(message.Chat, "рост");
+
+                break;
+
+            case "5":
+                client.Contraindications = otherStr.ToString();
+                _unitOfWork.SaveChanges();
+                break;
+
+            case "6":
+                client.HaveExp = otherStr.ToString();
+                _unitOfWork.SaveChanges();
+                break;
+
+            case "7":
+                if (int.TryParse(otherStr.ToString(), out int b))
+                {
+                    client.Bust = b;
+                    _unitOfWork.SaveChanges();
+                }
+                else
+                    _sender.SendFailureMessage(message.Chat, "обхват груди");
+
+                break;
+
+            case "8":
+                if (int.TryParse(otherStr.ToString(), out int waist))
+                {
+                    client.Waist = waist;
+                    _unitOfWork.SaveChanges();
+                }
+                else
+                    _sender.SendFailureMessage(message.Chat, "обхват талии");
+
+                break;
+
+            case "9":
+                if (int.TryParse(otherStr.ToString(), out int s))
+                {
+                    client.Stomach = s;
+                    _unitOfWork.SaveChanges();
+                }
+                else
+                    _sender.SendFailureMessage(message.Chat, "обхват живота");
+
+                break;
+
+            case "10":
+                if (int.TryParse(otherStr.ToString(), out int hips))
+                {
+                    client.Hips = hips;
+                    _unitOfWork.SaveChanges();
+                }
+                else
+                    _sender.SendFailureMessage(message.Chat, "обхват бёдер");
+
+                break;
+
+            case "11":
+                if (int.TryParse(otherStr.ToString(), out int legs))
+                {
+                    client.Legs = legs;
+                    _unitOfWork.SaveChanges();
+                }
+                else
+                    _sender.SendFailureMessage(message.Chat, "обхват ноги");
+
+                break;
+
+            default:
+                _sender.SendTextMessage(message.Chat, "Некорректный ввод!");
+                return;
+        }
+
+        _sender.SendTextMessage(message.Chat, "Данные успешно обновлены");
+        if (Statuses.ContainsKey(message.Chat.Id))
+            Statuses.Remove(message.Chat.Id);
     }
 }

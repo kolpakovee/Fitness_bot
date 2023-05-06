@@ -63,6 +63,6 @@ public class Client : IDomainObject
             return $"Клиент {Identifier} не прошёл анкету.";
 
         return
-            $"{Name} {Surname}\n- Дата рождения: {DateOfBirth}\n- Цель: {Goal}\n- Вес (кг): {Weight}\n- Рост (см): {Height}\n- Противопоказания: {Contraindications}\n- Есть ли опыт? {HaveExp}\n- Обхват груди (см): {Bust}\n- Обхват талии (см): {Waist}\n- Обхват живота (см): {Stomach}\n- Обхват бёдер (см): {Hips}\n- Обхват ноги (см): {Legs}";
+            $"{Name} {Surname}\n1) Дата рождения: {DateOfBirth}\n2) Цель: {Goal}\n3) Вес (кг): {Weight}\n4) Рост (см): {Height}\n5) Противопоказания: {Contraindications}\n6) Есть ли опыт? {HaveExp}\n7) Обхват груди (см): {Bust}\n8) Обхват талии (см): {Waist}\n9) Обхват живота (см): {Stomach}\n10) Обхват бёдер (см): {Hips}\n11) Обхват ноги (см): {Legs}";
     }
 }
