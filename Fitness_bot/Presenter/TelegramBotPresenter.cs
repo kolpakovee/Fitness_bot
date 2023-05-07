@@ -1,3 +1,4 @@
+using System.Globalization;
 using Fitness_bot.Enums;
 using Fitness_bot.Model.BLL;
 using Telegram.Bot;
@@ -24,7 +25,7 @@ public class TelegramBotPresenter
         // Если получили сообщение
         if (update.Type == UpdateType.Message)
             HandleMessage(update);
-        
+
         return Task.CompletedTask;
     }
 
@@ -43,14 +44,14 @@ public class TelegramBotPresenter
             HandleClientAnswers(message);
             return;
         }
-        
+
         // Проверяем, вводит ли ожидаемые данные тренер
         if (_logic.Trainer.Statuses.ContainsKey(id))
         {
             HandleTrainerAnswers(message);
             return;
         }
-        
+
         _logic.UserIdentification(message);
     }
 
@@ -118,11 +119,11 @@ public class TelegramBotPresenter
             case ClientActionStatus.AddLegs:
                 _logic.Client.InputLegs(message);
                 break;
-            
+
             case ClientActionStatus.AddTraining:
                 _logic.Client.FinishRecordTraining(message);
                 break;
-            
+
             case ClientActionStatus.EditForm:
                 _logic.Client.FinishEditForm(message);
                 break;
@@ -143,7 +144,9 @@ public class TelegramBotPresenter
                 break;
 
             case TrainerActionStatus.AddTrainingDate:
-                _logic.Trainer.AddTrainingDate(message);
+                break;
+
+            case TrainerActionStatus.AddTrainingTime:
                 break;
 
             case TrainerActionStatus.AddTrainingLocation:
@@ -155,7 +158,6 @@ public class TelegramBotPresenter
                 break;
 
             case TrainerActionStatus.DeleteTrainingByTime:
-                _logic.Trainer.DeleteTrainingByTime(message);
                 break;
         }
     }
@@ -170,6 +172,26 @@ public class TelegramBotPresenter
 
         switch (update.CallbackQuery?.Data)
         {
+            case var str when str?.Split('*')[0] == "delete":
+                if (!_logic.Trainer.Statuses.ContainsKey(queryMessage.Chat.Id)) return;
+                if (_logic.Trainer.Statuses[queryMessage.Chat.Id] == TrainerActionStatus.DeleteTrainingByTime)
+                    _logic.Trainer.DeleteTrainingByTime(queryMessage, str.Split('*')[1]);
+                break;
+
+            case var s when DateTime.TryParseExact(s, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None,
+                out DateTime date):
+                if (!_logic.Trainer.Statuses.ContainsKey(queryMessage.Chat.Id)) return;
+                if (_logic.Trainer.Statuses[queryMessage.Chat.Id] == TrainerActionStatus.AddTrainingDate)
+                    _logic.Trainer.AddTrainingDateWithoutTime(queryMessage, date);
+                break;
+
+            case var s when DateTime.TryParseExact(s, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None,
+                out DateTime time):
+                if (!_logic.Trainer.Statuses.ContainsKey(queryMessage.Chat.Id)) return;
+                if (_logic.Trainer.Statuses[queryMessage.Chat.Id] == TrainerActionStatus.AddTrainingTime)
+                    _logic.Trainer.AddTrainingTime(queryMessage, time);
+                break;
+            
             case "t_timetable":
                 _logic.Trainer.Timetable(queryMessage);
                 break;
@@ -205,15 +227,15 @@ public class TelegramBotPresenter
             case "cl_timetable":
                 _logic.Client.Timetable(queryMessage);
                 break;
-            
+
             case "cl_trainings":
                 _logic.Client.Trainings(queryMessage);
                 break;
-            
+
             case "cl_record":
                 _logic.Client.StartRecordTraining(queryMessage);
                 break;
-            
+
             case "cl_cancel":
                 _logic.Client.CancelTraining(queryMessage);
                 break;

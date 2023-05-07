@@ -23,6 +23,14 @@ public class MessageSender
             cancellationToken: _cancellationToken);
     }
 
+    public async void SendChooseMenuMessage(Chat chat, InlineKeyboardMarkup keyboardMarkup, string text)
+    {
+        await _botClient.SendTextMessageAsync(chat,
+            $"Выберите {text}:",
+            replyMarkup: keyboardMarkup,
+            cancellationToken: _cancellationToken);
+    }
+
     public async void SendQuestion(Chat chat)
     {
         await _botClient.SendTextMessageAsync(chat,
@@ -44,7 +52,7 @@ public class MessageSender
             $"Введите {text}:",
             cancellationToken: _cancellationToken);
     }
-
+ 
     public async void SendFailureMessage(Chat chat, string text)
     {
         await _botClient.SendTextMessageAsync(chat,

@@ -10,32 +10,13 @@ public class Training : IDomainObject
     public long TrainerId { get; set; }
     public string? ClientUsername { get; set; }
     public string? Location { get; set; }
+    public DateTime Time { get; set; }
+    
 
-    public Training(string identifier)
-    {
-        Identifier = identifier;
-    }
-
-    public Training(string identifier, long trainerId)
+    public Training(long trainerId)
     {
         TrainerId = trainerId;
-        Identifier = identifier;
     }
 
-    public Training(string identifier, long trainerId, string? clientUsername, string location)
-    {
-        TrainerId = trainerId;
-        ClientUsername = clientUsername;
-        Location = location;
-        Identifier = identifier;
-    }
-
-    public Training(string identifier, long trainerId, string location)
-    {
-        TrainerId = trainerId;
-        Location = location;
-        Identifier = identifier;
-    }
-
-    public override string ToString() => $"⌚ {Identifier}\n📍 {Location}";
+    public override string ToString() => $"⏳ {Identifier.Split('+')[0]}\n📍 {Location}\n 👤 @{ClientUsername}";
 }

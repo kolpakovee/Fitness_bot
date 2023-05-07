@@ -190,12 +190,12 @@ public class ClientLogic
 
         List<Training> trainingsIn7Days = _unitOfWork.Trainings
             .GetAll()
-            .Where(t => t.ClientUsername == message.Chat.Username && DateTime.Parse(t.Identifier) >= now &&
-                        DateTime.Parse(t.Identifier) <= now.AddDays(7) && client.TrainerId == t.TrainerId)
-            .OrderBy(t => DateTime.Parse(t.Identifier))
+            .Where(t => t.ClientUsername == message.Chat.Username && DateTime.Parse(t.Identifier.Split('+')[0]) >= now &&
+                        DateTime.Parse(t.Identifier.Split('+')[0]) <= now.AddDays(7) && client.TrainerId == t.TrainerId)
+            .OrderBy(t => DateTime.Parse(t.Identifier.Split('+')[0]))
             .ToList();
 
-        var groupedTrainings = trainingsIn7Days.GroupBy(t => DateTime.Parse(t.Identifier).DayOfWeek);
+        var groupedTrainings = trainingsIn7Days.GroupBy(t => DateTime.Parse(t.Identifier.Split('+')[0]).DayOfWeek);
 
         StringBuilder timetable = new StringBuilder();
 
@@ -224,14 +224,14 @@ public class ClientLogic
         var trainings = _unitOfWork.Trainings
             .GetAll()
             .Where(t => t.ClientUsername == "окно" &&
-                        DateTime.Parse(t.Identifier) >= now &&
-                        DateTime.Parse(t.Identifier) <= now.AddDays(7))
+                        DateTime.Parse(t.Identifier.Split('+')[0]) >= now &&
+                        DateTime.Parse(t.Identifier.Split('+')[0]) <= now.AddDays(7))
             .ToList();
 
         StringBuilder timetable = new StringBuilder();
 
         var groupedTrainings = trainings
-            .GroupBy(t => DateTime.Parse(t.Identifier).DayOfWeek);
+            .GroupBy(t => DateTime.Parse(t.Identifier.Split('+')[0]).DayOfWeek);
 
         foreach (var group in groupedTrainings)
         {
@@ -261,7 +261,7 @@ public class ClientLogic
         {
             Training? training = _unitOfWork.Trainings
                 .GetAll()
-                .FirstOrDefault(t => t.Identifier == dt.ToString("dd.MM.yyyy HH:mm"));
+                .FirstOrDefault(t => t.Identifier.Split('+')[0] == dt.ToString("dd.MM.yyyy HH:mm"));
 
             if (Statuses.ContainsKey(message.Chat.Id))
                 Statuses.Remove(message.Chat.Id);
@@ -293,7 +293,8 @@ public class ClientLogic
         Training? training = _unitOfWork.Trainings
             .GetAll()
             .Where(t => t.ClientUsername == message.Chat.Username)
-            .FirstOrDefault(t => DateTime.Parse(t.Identifier) - DateTime.Now >= TimeSpan.FromHours(3));
+            .OrderBy(t => DateTime.Parse(t.Identifier.Split('+')[0]))
+            .FirstOrDefault(t => DateTime.Parse(t.Identifier.Split('+')[0]) - DateTime.Now >= TimeSpan.FromHours(3));
 
         if (training != null)
         {

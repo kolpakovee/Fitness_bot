@@ -1,13 +1,17 @@
-﻿using Fitness_bot.Model.BLL;
+﻿using System.Globalization;
+using Fitness_bot.Model.BLL;
 using Fitness_bot.Presenter;
 using Fitness_bot.View;
 using Telegram.Bot;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Fitness_bot.TelegramBot;
 
 // TODO: написать комментарии со всеми входными параметрами
 // TODO: сделать логгер
-// TODO: убрать заморозку из ТЗ!!!!!!!!!
+// TODO: убрать заморозку из ТЗ!!!
+// TODO: возврат в главное меню
+// TODO: уведомления о тренировке
 
 static class TelegramBot
 {
@@ -30,6 +34,8 @@ static class TelegramBot
             presenter.HandleUpdate,
             presenter.HandleError
         );
+        
+        // BotClient.SendTextMessageAsync(633536863, "Выберите время", replyMarkup: MenuButtons.GetCalendarButtons(), cancellationToken: cts.Token);
 
         Console.ReadLine();
     }
