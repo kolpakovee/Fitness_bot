@@ -21,7 +21,7 @@ public class TrainerLogic
         Statuses = new Dictionary<long, TrainerActionStatus>();
         _trainings = new Dictionary<long, Training>();
     }
-    
+
     public void AddClientByUsername(Message message)
     {
         if (message.Text == null) return;
@@ -37,11 +37,17 @@ public class TrainerLogic
             Statuses.Remove(message.Chat.Id);
     }
 
-    public void DeleteClientByUsername(Message message)
+    public void DeleteClientByUsername(Message message, string identifier)
     {
         if (message.Text == null) return;
 
-        _unitOfWork.Clients.Delete(new Client(message.Text));
+        Client? client = _unitOfWork.Clients
+            .GetAll()
+            .FirstOrDefault(c => c.Identifier == identifier);
+
+        if (client == null) return;
+
+        _unitOfWork.Clients.Delete(client);
         _unitOfWork.SaveChanges();
 
         _sender.SendDeleteClientMes(message.Chat);
@@ -56,12 +62,10 @@ public class TrainerLogic
         {
             Time = dt
         };
-        
+
         if (!_trainings.ContainsKey(message.Chat.Id))
             _trainings.Add(message.Chat.Id, training);
-        if (Statuses.ContainsKey(message.Chat.Id))
-            Statuses[message.Chat.Id] = TrainerActionStatus.AddTrainingTime;
-        
+
         _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetTimeIntervals(), "время проведени тренировки");
     }
 
@@ -72,10 +76,10 @@ public class TrainerLogic
             DateTime oldTime = _trainings[message.Chat.Id].Time;
             DateTime newTime = new DateTime(oldTime.Year, oldTime.Month, oldTime.Day, dt.Hour, dt.Minute, 0, 0);
             _trainings[message.Chat.Id].Time = newTime;
-            
-            if (Statuses.ContainsKey(message.Chat.Id))
-                Statuses[message.Chat.Id] = TrainerActionStatus.AddTrainingLocation;
-            
+
+            if (!Statuses.ContainsKey(message.Chat.Id))
+                Statuses.Add(message.Chat.Id, TrainerActionStatus.AddTrainingLocation);
+
             _sender.SendInputMessage(message.Chat, "адрес места проведения тренировки");
         }
     }
@@ -84,26 +88,24 @@ public class TrainerLogic
     {
         if (_trainings.ContainsKey(message.Chat.Id))
             _trainings[message.Chat.Id].Location = message.Text;
-        if (Statuses.ContainsKey(message.Chat.Id))
-            Statuses[message.Chat.Id] = TrainerActionStatus.AddClientForTraining;
 
-        _sender.SendAddWindowMes(message.Chat);
+        List<Client> clients = _unitOfWork.Clients.GetAll().ToList();
+        _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetButtonsFromListOfClients(clients, "add_for_training"), "клиента для тренировки или 'окно', если хотите чтобы у клиентов появился слот для записи");
     }
-    
-    public void AddClientForTraining(Message message)
+
+    public void AddClientForTraining(Message message, string identifier)
     {
         if (_trainings.ContainsKey(message.Chat.Id))
-            _trainings[message.Chat.Id].ClientUsername = message.Text!.ToLower();
+            _trainings[message.Chat.Id].ClientUsername = identifier;
         else
             return;
 
-        _trainings[message.Chat.Id].Identifier = $"{_trainings[message.Chat.Id].Time.ToString("dd.MM.yyyy HH:mm")}+{_trainings[message.Chat.Id].Location}+{message.Chat.Id}";
+        _trainings[message.Chat.Id].Identifier =
+            $"{_trainings[message.Chat.Id].Time.ToString("dd.MM.yyyy HH:mm")}+{_trainings[message.Chat.Id].Location}+{message.Chat.Id}";
         _unitOfWork.Trainings.Add(_trainings[message.Chat.Id]);
         _unitOfWork.SaveChanges();
-        
+
         _trainings.Remove(message.Chat.Id);
-        if (Statuses.ContainsKey(message.Chat.Id))
-            Statuses.Remove(message.Chat.Id);
 
         _sender.SendAddTrainingMes(message);
     }
@@ -113,7 +115,7 @@ public class TrainerLogic
         Training? training = _unitOfWork.Trainings
             .GetAll()
             .FirstOrDefault(t => t.Identifier == identifier);
-            
+
         if (Statuses.ContainsKey(message.Chat.Id))
             Statuses.Remove(message.Chat.Id);
 
@@ -122,19 +124,20 @@ public class TrainerLogic
             _unitOfWork.Trainings.Delete(training);
             _unitOfWork.SaveChanges();
             _sender.SendDeleteTrainingMes(message.Chat);
-            
+
             Client? client = _unitOfWork.Clients
                 .GetAll()
                 .FirstOrDefault(c => c.Identifier == training.ClientUsername);
-            
-            if (client != null)
+
+            if (client != null && client.FinishedForm())
             {
                 Chat clientChat = new Chat { Id = client.Id };
                 _sender.SendTextMessage(clientChat, $"Ваш тренер {message.Chat.Username} отменил тренировку");
             }
+
             return;
         }
-            
+
         _sender.SendTextMessage(message.Chat, "Не удалось отменить тренировку");
     }
 
@@ -147,12 +150,10 @@ public class TrainerLogic
     {
         _sender.SendMenuMessage(message.Chat, MenuButtons.TrainerClientsMenu());
     }
-    
+
     public void AddTraining(Message message)
     {
         _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetCalendarButtons(), "дату проведения тренировки");
-        if (!Statuses.ContainsKey(message.Chat.Id))
-            Statuses.Add(message.Chat.Id, TrainerActionStatus.AddTrainingDate);
     }
 
     public void CancelTraining(Message message)
@@ -160,14 +161,15 @@ public class TrainerLogic
         DateTime now = DateTime.Now;
 
         List<Training> trainings = _unitOfWork.Trainings.GetAll()
-            .Where(t => DateTime.Parse(t.Identifier.Split('+')[0]) >= now && (DateTime.Parse(t.Identifier.Split('+')[0]) <= now.AddDays(7)) && t.TrainerId == message.Chat.Id)
+            .Where(t => DateTime.Parse(t.Identifier.Split('+')[0]) >= now &&
+                        (DateTime.Parse(t.Identifier.Split('+')[0]) <= now.AddDays(7)) &&
+                        t.TrainerId == message.Chat.Id)
             .OrderBy(t => DateTime.Parse(t.Identifier.Split('+')[0]))
             .ToList();
+
+        _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetButtonsFromListOfTrainings(trainings, "delete"),
+            "тренировку, которую хотите удалить");
         
-        _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetButtonsFromListOfTrainings(trainings),"тренировку, которую хотите удалить");
-        
-        if (!Statuses.ContainsKey(message.Chat.Id))
-            Statuses.Add(message.Chat.Id, TrainerActionStatus.DeleteTrainingByTime);
     }
 
     public void WeekTrainerTimetable(Message message)
@@ -179,7 +181,8 @@ public class TrainerLogic
         DateTime now = DateTime.Now;
 
         List<Training> trainingsIn7Days = trainings
-            .Where(t => DateTime.Parse(t.Identifier.Split('+')[0]) >= now && (DateTime.Parse(t.Identifier.Split('+')[0]) <= now.AddDays(7)) && (t.ClientUsername != "окно"))
+            .Where(t => DateTime.Parse(t.Identifier.Split('+')[0]) >= now &&
+                        (DateTime.Parse(t.Identifier.Split('+')[0]) <= now.AddDays(7)) && (t.ClientUsername != "окно"))
             .OrderBy(t => DateTime.Parse(t.Identifier.Split('+')[0]))
             .ToList();
 
@@ -201,34 +204,39 @@ public class TrainerLogic
 
         _sender.SendTextMessage(message.Chat, text);
     }
-    
+
     public void TrainerRegistration(Message message)
     {
         if (message.Chat.Username == null) return;
 
         _unitOfWork.Trainers.Add(new Trainer(message.Chat.Id, message.Chat.Username));
         _unitOfWork.SaveChanges();
-        
+
         _sender.SendTrainerInstructionMes(message.Chat);
     }
-    
+
     public void CheckBase(Message message)
     {
         var clients = _unitOfWork.Clients
             .GetAll()
             .Where(cl => cl.TrainerId == message.Chat.Id)
             .ToList();
-
-        StringBuilder sb = new StringBuilder();
-
-        foreach (var client in clients)
-            sb.Append(client).Append("\n\n");
-
-        String text = sb.Length == 0 ? "Пока клиентов в базе нет :)" : sb.ToString();
-
-        _sender.SendTextMessage(message.Chat, text);
+        
+        _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetButtonsFromListOfClients(clients, "view"),
+            "клиента для просмотра его анкеты");
     }
-    
+
+    public void CheckClientById(Message message, string identifier)
+    {
+        Client? client = _unitOfWork.Clients
+            .GetAll()
+            .FirstOrDefault(c => c.Identifier == identifier);
+
+        if (client == null) return;
+
+        _sender.SendTextMessage(message.Chat, client.ToString());
+    }
+
     public void AddClient(Message message)
     {
         _sender.SendAddOrDeleteClientMes(message.Chat, "добавить");
@@ -238,8 +246,8 @@ public class TrainerLogic
 
     public void DeleteClient(Message message)
     {
-        _sender.SendAddOrDeleteClientMes(message.Chat, "удалить");
-        if (!Statuses.ContainsKey(message.Chat.Id))
-            Statuses.Add(message.Chat.Id, TrainerActionStatus.DeleteClientByUsername);
+        _sender.SendChooseMenuMessage(message.Chat,
+            MenuButtons.GetButtonsFromListOfClients(_unitOfWork.Clients.GetAll().ToList(), "remove_client"),
+            "клиента, которого хотите удалить");
     }
 }

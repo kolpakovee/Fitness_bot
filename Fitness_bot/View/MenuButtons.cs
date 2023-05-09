@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using Fitness_bot.Model.Domain;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -191,7 +192,8 @@ public static class MenuButtons
                     continue;
                 }
 
-                keyboardButtons.Add(InlineKeyboardButton.WithCallbackData(firstDay.Day.ToString(), firstDay.ToString("dd/MM/yyyy")));
+                keyboardButtons.Add(InlineKeyboardButton.WithCallbackData(firstDay.Day.ToString(),
+                    firstDay.ToString("dd/MM/yyyy")));
                 firstDay = firstDay.AddDays(1);
             }
 
@@ -217,18 +219,91 @@ public static class MenuButtons
         return new InlineKeyboardMarkup(buttons);
     }
 
-    public static InlineKeyboardMarkup GetButtonsFromListOfTrainings(List<Training> trainings)
+    public static InlineKeyboardMarkup GetButtonsFromListOfTrainings(List<Training> trainings, string command)
     {
         List<List<InlineKeyboardButton>> buttons = new List<List<InlineKeyboardButton>>();
 
         foreach (var training in trainings)
         {
+            string text = command == "delete"
+                ? $"⏳{training.Time:dd.MM HH:mm} 📍{training.Location} 👤@{training.ClientUsername}"
+                : $"⏳{training.Time:dd.MM HH:mm} 📍{training.Location}";
             buttons.Add(new List<InlineKeyboardButton>
             {
-                InlineKeyboardButton.WithCallbackData($"{training.Time:dd.MM HH:mm} {training.Location} @{training.ClientUsername}", $"delete*{training.Identifier}")
+                InlineKeyboardButton.WithCallbackData(
+                    text,
+                    $"{command}*{training.Identifier}")
             });
         }
 
+        return new InlineKeyboardMarkup(buttons);
+    }
+
+    public static InlineKeyboardMarkup GetButtonsFromListOfClients(List<Client> clients, string command)
+    {
+        List<List<InlineKeyboardButton>> buttons = new List<List<InlineKeyboardButton>>();
+
+        if (command == "add_for_training")
+        {
+            buttons.Add(new List<InlineKeyboardButton>
+            {
+                InlineKeyboardButton.WithCallbackData("окно", $"{command}*окно")
+            });
+        }
+
+        if (clients.Count == 0 && command != "add_for_training")
+        {
+            buttons.Add(new List<InlineKeyboardButton>
+            {
+                InlineKeyboardButton.WithCallbackData("Пока что здесь пусто :)", "ignore")
+            });
+            return new InlineKeyboardMarkup(buttons);
+        }
+
+        foreach (var client in clients)
+        {
+            string str = client.Identifier;
+            if (client.FinishedForm())
+                str = $"{client.Name} {client.Surname}";
+
+            buttons.Add(new List<InlineKeyboardButton>
+            {
+                InlineKeyboardButton.WithCallbackData(str, $"{command}*{client.Identifier}")
+            });
+        }
+
+        return new InlineKeyboardMarkup(buttons);
+    }
+    
+    public static InlineKeyboardMarkup GetButtonsForClientForm(Client client)
+    {
+        List<List<InlineKeyboardButton>> buttons = new List<List<InlineKeyboardButton>>
+        {
+            new()
+            {
+                InlineKeyboardButton.WithCallbackData($"рост: {client.Height}", "edit*height"),
+                InlineKeyboardButton.WithCallbackData($"вес: {client.Weight}", "edit*weight")
+            },
+            
+            new()
+            {
+                InlineKeyboardButton.WithCallbackData($"грудь: {client.Bust}", "edit*bust"),
+                InlineKeyboardButton.WithCallbackData($"талия: {client.Waist}", "edit*waist")
+            },
+            
+            new()
+            {
+                InlineKeyboardButton.WithCallbackData($"живот: {client.Stomach}", "edit*stomach"),
+                InlineKeyboardButton.WithCallbackData($"бёдра: {client.Hips}", "edit*hips")
+            },
+            
+            new()
+            {
+                InlineKeyboardButton.WithCallbackData($"нога: {client.Legs}", "edit*legs"),
+                InlineKeyboardButton.WithCallbackData($"цель: {client.Goal}", "edit*goal")
+            }
+        };
+        
         return new InlineKeyboardMarkup(buttons);
     }
 }

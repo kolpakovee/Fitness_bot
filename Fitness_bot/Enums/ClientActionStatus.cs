@@ -15,6 +15,12 @@ public enum ClientActionStatus
     AddStomach,
     AddHips,
     AddLegs,
-    AddTraining,
-    EditForm
+    EditGoal,
+    EditWeight,
+    EditHeight,
+    EditBust,
+    EditWaist,
+    EditStomach,
+    EditHips,
+    EditLegs,
 }

@@ -190,7 +190,8 @@ public class ClientLogic
 
         List<Training> trainingsIn7Days = _unitOfWork.Trainings
             .GetAll()
-            .Where(t => t.ClientUsername == message.Chat.Username && DateTime.Parse(t.Identifier.Split('+')[0]) >= now &&
+            .Where(t => t.ClientUsername == message.Chat.Username &&
+                        DateTime.Parse(t.Identifier.Split('+')[0]) >= now &&
                         DateTime.Parse(t.Identifier.Split('+')[0]) <= now.AddDays(7) && client.TrainerId == t.TrainerId)
             .OrderBy(t => DateTime.Parse(t.Identifier.Split('+')[0]))
             .ToList();
@@ -216,9 +217,6 @@ public class ClientLogic
 
     public void StartRecordTraining(Message message)
     {
-        if (!Statuses.ContainsKey(message.Chat.Id))
-            Statuses.Add(message.Chat.Id, ClientActionStatus.AddTraining);
-
         DateTime now = DateTime.Now;
 
         var trainings = _unitOfWork.Trainings
@@ -228,59 +226,34 @@ public class ClientLogic
                         DateTime.Parse(t.Identifier.Split('+')[0]) <= now.AddDays(7))
             .ToList();
 
-        StringBuilder timetable = new StringBuilder();
-
-        var groupedTrainings = trainings
-            .GroupBy(t => DateTime.Parse(t.Identifier.Split('+')[0]).DayOfWeek);
-
-        foreach (var group in groupedTrainings)
-        {
-            timetable.Append(group.Key).Append('\n');
-
-            foreach (var t in group)
-                timetable.Append(t).Append("\n\n");
-        }
-
-        if (timetable.Length == 0)
+        if (trainings.Count == 0)
         {
             _sender.SendTextMessage(message.Chat, "Окон на ближайщую неделю нет :(");
-            if (Statuses.ContainsKey(message.Chat.Id))
-                Statuses.Remove(message.Chat.Id);
             return;
         }
 
-        _sender.SendTextMessage(message.Chat, timetable.ToString());
-        _sender.SendTextMessage(message.Chat,
-            "Выберите окно из доступных (введите время проведения в формате dd.MM.yyyy HH:mm)");
+        _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetButtonsFromListOfTrainings(trainings, "record"),
+            "слот из списка доступных:");
     }
 
-    public void FinishRecordTraining(Message message)
+    public void FinishRecordTraining(Message message, string identifier)
     {
-        if (DateTime.TryParseExact(message.Text, "dd.MM.yyyy HH:mm", null,
-                System.Globalization.DateTimeStyles.None, out DateTime dt))
+        Training? training = _unitOfWork.Trainings
+            .GetAll()
+            .FirstOrDefault(t => t.Identifier == identifier);
+
+        if (training != null)
         {
-            Training? training = _unitOfWork.Trainings
-                .GetAll()
-                .FirstOrDefault(t => t.Identifier.Split('+')[0] == dt.ToString("dd.MM.yyyy HH:mm"));
-
-            if (Statuses.ContainsKey(message.Chat.Id))
-                Statuses.Remove(message.Chat.Id);
-
-            if (training != null)
-            {
-                training.ClientUsername = message.Chat.Username;
-                _unitOfWork.SaveChanges();
-                _sender.SendAddTrainingMes(message);
-                Chat trainerChat = new Chat { Id = training.TrainerId };
-                _sender.SendTextMessage(trainerChat,
-                    $"Клиент {message.Chat.Username} записался на тренировку \n{training}");
-                return;
-            }
-
-            _sender.SendTextMessage(message.Chat, "Не удалось записаться на тренировку");
+            training.ClientUsername = message.Chat.Username;
+            _unitOfWork.SaveChanges();
+            _sender.SendAddTrainingMes(message);
+            Chat trainerChat = new Chat { Id = training.TrainerId };
+            _sender.SendTextMessage(trainerChat,
+                $"Клиент {message.Chat.Username} записался на тренировку \n{training}");
+            return;
         }
-        else
-            _sender.SendFailureMessage(message.Chat, "дату");
+
+        _sender.SendTextMessage(message.Chat, "Не удалось записаться на тренировку");
     }
 
     public void Trainings(Message message)
@@ -316,15 +289,10 @@ public class ClientLogic
             .GetAll()
             .FirstOrDefault(cl => cl.Identifier == message.Chat.Username);
 
-        _sender.SendTextMessage(message.Chat, client!.ToString());
+        if (client == null) return;
 
-        if (!Statuses.ContainsKey(message.Chat.Id))
-        {
-            Statuses.Add(message.Chat.Id, ClientActionStatus.EditForm);
-            _sender.SendEditFormMes(message.Chat);
-        }
-        else
-            _sender.SendTextMessage(message.Chat, "Невозможно редактировать форму!");
+        _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetButtonsForClientForm(client),
+            "параметр, который хотите редактировать");
     }
 
     public void FinishEditForm(Message message)
@@ -335,25 +303,17 @@ public class ClientLogic
 
         if (client == null) return;
 
-        var arr = message.Text.Split(' ');
-        StringBuilder otherStr = new StringBuilder();
-        for (int i = 1; i < arr.Length; i++)
-            otherStr.Append(arr[i]).Append(' ');
+        if (!Statuses.ContainsKey(message.Chat.Id)) return;
 
-        switch (arr[0])
+        switch (Statuses[message.Chat.Id])
         {
-            case "1":
-                client.DateOfBirth = otherStr.ToString();
+            case ClientActionStatus.EditGoal:
+                client.Goal = message.Text;
                 _unitOfWork.SaveChanges();
                 break;
 
-            case "2":
-                client.Goal = otherStr.ToString();
-                _unitOfWork.SaveChanges();
-                break;
-
-            case "3":
-                if (int.TryParse(otherStr.ToString(), out int w))
+            case ClientActionStatus.EditWeight:
+                if (int.TryParse(message.Text, out int w))
                 {
                     client.Weight = w;
                     _unitOfWork.SaveChanges();
@@ -363,8 +323,8 @@ public class ClientLogic
 
                 break;
 
-            case "4":
-                if (int.TryParse(otherStr.ToString(), out int h))
+            case ClientActionStatus.EditHeight:
+                if (int.TryParse(message.Text, out int h))
                 {
                     client.Height = h;
                     _unitOfWork.SaveChanges();
@@ -374,18 +334,8 @@ public class ClientLogic
 
                 break;
 
-            case "5":
-                client.Contraindications = otherStr.ToString();
-                _unitOfWork.SaveChanges();
-                break;
-
-            case "6":
-                client.HaveExp = otherStr.ToString();
-                _unitOfWork.SaveChanges();
-                break;
-
-            case "7":
-                if (int.TryParse(otherStr.ToString(), out int b))
+            case ClientActionStatus.EditBust:
+                if (int.TryParse(message.Text, out int b))
                 {
                     client.Bust = b;
                     _unitOfWork.SaveChanges();
@@ -395,8 +345,8 @@ public class ClientLogic
 
                 break;
 
-            case "8":
-                if (int.TryParse(otherStr.ToString(), out int waist))
+            case ClientActionStatus.EditWaist:
+                if (int.TryParse(message.Text, out int waist))
                 {
                     client.Waist = waist;
                     _unitOfWork.SaveChanges();
@@ -406,8 +356,8 @@ public class ClientLogic
 
                 break;
 
-            case "9":
-                if (int.TryParse(otherStr.ToString(), out int s))
+            case ClientActionStatus.EditStomach:
+                if (int.TryParse(message.Text, out int s))
                 {
                     client.Stomach = s;
                     _unitOfWork.SaveChanges();
@@ -417,8 +367,8 @@ public class ClientLogic
 
                 break;
 
-            case "10":
-                if (int.TryParse(otherStr.ToString(), out int hips))
+            case ClientActionStatus.EditHips:
+                if (int.TryParse(message.Text, out int hips))
                 {
                     client.Hips = hips;
                     _unitOfWork.SaveChanges();
@@ -428,8 +378,8 @@ public class ClientLogic
 
                 break;
 
-            case "11":
-                if (int.TryParse(otherStr.ToString(), out int legs))
+            case ClientActionStatus.EditLegs:
+                if (int.TryParse(message.Text, out int legs))
                 {
                     client.Legs = legs;
                     _unitOfWork.SaveChanges();
@@ -438,14 +388,56 @@ public class ClientLogic
                     _sender.SendFailureMessage(message.Chat, "обхват ноги");
 
                 break;
-
-            default:
-                _sender.SendTextMessage(message.Chat, "Некорректный ввод!");
-                return;
         }
 
         _sender.SendTextMessage(message.Chat, "Данные успешно обновлены");
-        if (Statuses.ContainsKey(message.Chat.Id))
-            Statuses.Remove(message.Chat.Id);
+
+        Statuses.Remove(message.Chat.Id);
+    }
+
+    public void EditForm(Message message, string par)
+    {
+        switch (par)
+        {
+            case "height":
+                Statuses.Add(message.Chat.Id, ClientActionStatus.EditHeight);
+                _sender.SendInputMessage(message.Chat, "новый рост");
+                break;
+
+            case "weight":
+                Statuses.Add(message.Chat.Id, ClientActionStatus.EditWeight);
+                _sender.SendInputMessage(message.Chat, "новый вес");
+                break;
+
+            case "bust":
+                Statuses.Add(message.Chat.Id, ClientActionStatus.EditBust);
+                _sender.SendInputMessage(message.Chat, "новый обхва груди");
+                break;
+
+            case "waist":
+                Statuses.Add(message.Chat.Id, ClientActionStatus.EditWaist);
+                _sender.SendInputMessage(message.Chat, "новый обхва талии");
+                break;
+
+            case "stomach":
+                Statuses.Add(message.Chat.Id, ClientActionStatus.EditStomach);
+                _sender.SendInputMessage(message.Chat, "новый обхват живота");
+                break;
+
+            case "hips":
+                Statuses.Add(message.Chat.Id, ClientActionStatus.EditHips);
+                _sender.SendInputMessage(message.Chat, "новый обхват бёдер");
+                break;
+
+            case "legs":
+                Statuses.Add(message.Chat.Id, ClientActionStatus.EditLegs);
+                _sender.SendInputMessage(message.Chat, "новый обхват ноги");
+                break;
+
+            case "goal":
+                Statuses.Add(message.Chat.Id, ClientActionStatus.EditGoal);
+                _sender.SendInputMessage(message.Chat, "новую цель");
+                break;
+        }
     }
 }

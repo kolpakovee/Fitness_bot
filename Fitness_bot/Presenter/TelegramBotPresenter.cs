@@ -20,7 +20,10 @@ public class TelegramBotPresenter
         CancellationToken cancellationToken)
     {
         if (update.Type == UpdateType.CallbackQuery)
+        {
             HandleCallbackQuery(update);
+            return Task.CompletedTask;
+        }
 
         // Если получили сообщение
         if (update.Type == UpdateType.Message)
@@ -120,11 +123,14 @@ public class TelegramBotPresenter
                 _logic.Client.InputLegs(message);
                 break;
 
-            case ClientActionStatus.AddTraining:
-                _logic.Client.FinishRecordTraining(message);
-                break;
-
-            case ClientActionStatus.EditForm:
+            case ClientActionStatus.EditBust:
+            case ClientActionStatus.EditGoal:
+            case ClientActionStatus.EditHips:
+            case ClientActionStatus.EditLegs:
+            case ClientActionStatus.EditStomach:
+            case ClientActionStatus.EditWaist:
+            case ClientActionStatus.EditWeight:
+            case ClientActionStatus.EditHeight:
                 _logic.Client.FinishEditForm(message);
                 break;
         }
@@ -139,25 +145,8 @@ public class TelegramBotPresenter
                 _logic.Trainer.AddClientByUsername(message);
                 break;
 
-            case TrainerActionStatus.DeleteClientByUsername:
-                _logic.Trainer.DeleteClientByUsername(message);
-                break;
-
-            case TrainerActionStatus.AddTrainingDate:
-                break;
-
-            case TrainerActionStatus.AddTrainingTime:
-                break;
-
             case TrainerActionStatus.AddTrainingLocation:
                 _logic.Trainer.AddTrainingLocation(message);
-                break;
-
-            case TrainerActionStatus.AddClientForTraining:
-                _logic.Trainer.AddClientForTraining(message);
-                break;
-
-            case TrainerActionStatus.DeleteTrainingByTime:
                 break;
         }
     }
@@ -172,26 +161,6 @@ public class TelegramBotPresenter
 
         switch (update.CallbackQuery?.Data)
         {
-            case var str when str?.Split('*')[0] == "delete":
-                if (!_logic.Trainer.Statuses.ContainsKey(queryMessage.Chat.Id)) return;
-                if (_logic.Trainer.Statuses[queryMessage.Chat.Id] == TrainerActionStatus.DeleteTrainingByTime)
-                    _logic.Trainer.DeleteTrainingByTime(queryMessage, str.Split('*')[1]);
-                break;
-
-            case var s when DateTime.TryParseExact(s, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None,
-                out DateTime date):
-                if (!_logic.Trainer.Statuses.ContainsKey(queryMessage.Chat.Id)) return;
-                if (_logic.Trainer.Statuses[queryMessage.Chat.Id] == TrainerActionStatus.AddTrainingDate)
-                    _logic.Trainer.AddTrainingDateWithoutTime(queryMessage, date);
-                break;
-
-            case var s when DateTime.TryParseExact(s, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None,
-                out DateTime time):
-                if (!_logic.Trainer.Statuses.ContainsKey(queryMessage.Chat.Id)) return;
-                if (_logic.Trainer.Statuses[queryMessage.Chat.Id] == TrainerActionStatus.AddTrainingTime)
-                    _logic.Trainer.AddTrainingTime(queryMessage, time);
-                break;
-            
             case "t_timetable":
                 _logic.Trainer.Timetable(queryMessage);
                 break;
@@ -250,6 +219,40 @@ public class TelegramBotPresenter
 
             case "i_am_client":
                 _logic.RejectNewUser(queryMessage);
+                break;
+
+            case var str when str?.Split('*')[0] == "delete":
+                _logic.Trainer.DeleteTrainingByTime(queryMessage, str.Split('*')[1]);
+                break;
+
+            case var s when DateTime.TryParseExact(s, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None,
+                out DateTime date):
+                _logic.Trainer.AddTrainingDateWithoutTime(queryMessage, date);
+                break;
+
+            case var s when DateTime.TryParseExact(s, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None,
+                out DateTime time):
+                _logic.Trainer.AddTrainingTime(queryMessage, time);
+                break;
+
+            case var q when q?.Split('*')[0] == "view":
+                _logic.Trainer.CheckClientById(queryMessage, q.Split('*')[1]);
+                break;
+
+            case var client when client?.Split('*')[0] == "remove_client":
+                _logic.Trainer.DeleteClientByUsername(queryMessage, client.Split('*')[1]);
+                break;
+
+            case var c when c?.Split('*')[0] == "add_for_training":
+                _logic.Trainer.AddClientForTraining(queryMessage, c.Split('*')[1]);
+                break;
+
+            case var command when command?.Split('*')[0] == "record":
+                _logic.Client.FinishRecordTraining(queryMessage, command.Split('*')[1]);
+                break;
+
+            case var par when par?.Split('*')[0] == "edit":
+                _logic.Client.EditForm(queryMessage, par.Split('*')[1]);
                 break;
         }
     }

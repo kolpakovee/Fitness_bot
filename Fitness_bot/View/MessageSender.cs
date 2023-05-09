@@ -89,13 +89,6 @@ public class MessageSender
             cancellationToken: _cancellationToken);
     }
 
-    public async void SendAddWindowMes(Chat chat)
-    {
-        await _botClient.SendTextMessageAsync(chat,
-            "Если вы хотите добавить окно для клиентов, то введите 'окно', иначе введите имя пользователя клиента в Telegram:",
-            cancellationToken: _cancellationToken);
-    }
-
     public async void SendAddTrainingMes(Message message)
     {
         await _botClient.SendTextMessageAsync(message.Chat,
@@ -107,13 +100,6 @@ public class MessageSender
     {
         await _botClient.SendTextMessageAsync(chat,
             "Тренировка успешно удалена из базы данных.",
-            cancellationToken: _cancellationToken);
-    }
-
-    public async void SendAddOrDeleteTrainingMes(Chat chat, string text)
-    {
-        await _botClient.SendTextMessageAsync(chat,
-            $"Чтобы {text} тренировку, введите время проведения в формате dd.MM.yyyy HH:mm:",
             cancellationToken: _cancellationToken);
     }
 
@@ -157,14 +143,6 @@ public class MessageSender
     {
         await _botClient.SendTextMessageAsync(chat,
             "Извините, но я не могу определить ваше имя пользователя в Telegram, чтобы идентифицировать :(",
-            cancellationToken: _cancellationToken);
-    }
-
-    public async void SendEditFormMes(Chat chat)
-    {
-        await _botClient.SendTextMessageAsync(chat,
-            "Введите номер пункта, который вы хотите редактировать и новое значение.\n" +
-            "Например, если вы хотите изменить вес на 75 кг, введите '3 75'",
             cancellationToken: _cancellationToken);
     }
 }

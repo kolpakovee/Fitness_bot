@@ -1,9 +1,7 @@
-﻿using System.Globalization;
-using Fitness_bot.Model.BLL;
+﻿using Fitness_bot.Model.BLL;
 using Fitness_bot.Presenter;
 using Fitness_bot.View;
 using Telegram.Bot;
-using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Fitness_bot.TelegramBot;
 
@@ -36,7 +34,8 @@ static class TelegramBot
         );
         
         // BotClient.SendTextMessageAsync(633536863, "Выберите время", replyMarkup: MenuButtons.GetCalendarButtons(), cancellationToken: cts.Token);
-
+        BotClient.DeleteMessageAsync(633536863, 633536863, cancellationToken: cts.Token);
+        
         Console.ReadLine();
     }
 }
