@@ -4,7 +4,7 @@ namespace Fitness_bot.Model.DAL;
 
 public class UnitOfWork
 {
-    private TelegramBotContext _context = new TelegramBotContext();
+    private TelegramBotContext _context = new();
     private EntityRepository<Client>? _clients;
     private EntityRepository<Trainer>? _trainers;
     private EntityRepository<Training>? _trainings;

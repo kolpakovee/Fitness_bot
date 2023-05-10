@@ -5,7 +5,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace Fitness_bot.TelegramBot;
 
-public static class TelegramBotExstention
+public static class TelegramBotExtension
 {
     public static ITelegramBotClient Start(
         this ITelegramBotClient botClient,

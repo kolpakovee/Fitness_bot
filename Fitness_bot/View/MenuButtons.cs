@@ -15,14 +15,14 @@ public static class MenuButtons
             new[]
             {
                 InlineKeyboardButton.WithCallbackData(
-                    "Расписание",
+                    "🗓️Расписание",
                     "t_timetable")
             },
             // second row
             new[]
             {
                 InlineKeyboardButton.WithCallbackData(
-                    "Клиенты",
+                    " 👥Клиенты",
                     "clients")
             }
         });
@@ -36,19 +36,19 @@ public static class MenuButtons
             new[]
             {
                 InlineKeyboardButton.WithCallbackData(
-                    "Расписание на 7 дней",
+                    "Расписание на 7️⃣ дней",
                     "week_timetable")
             },
             new[]
             {
                 InlineKeyboardButton.WithCallbackData(
-                    "Добавить тренировку",
+                    "➕Добавить тренировку",
                     "add_training")
             },
             new[]
             {
                 InlineKeyboardButton.WithCallbackData(
-                    "Отменить тренировку",
+                    "➖Отменить тренировку",
                     "cancel_training")
             }
         });
@@ -209,10 +209,14 @@ public static class MenuButtons
 
         for (int i = 8; i < 22; i += 2)
         {
+            string startTime = i > 9 ? i.ToString() : "0" + i;
+            string middleTime = i + 1 > 9 ? (i + 1).ToString() : "0" + (i + 1);
+            string endTime = i + 2 > 9 ? (i + 2).ToString() : "0" + (i + 2);
+            
             buttons.Add(new List<InlineKeyboardButton>
             {
-                InlineKeyboardButton.WithCallbackData($"{i}:00 - {i + 1}:00", $"{i}:00"),
-                InlineKeyboardButton.WithCallbackData($"{i + 1}:00 - {i + 2}:00", $"{i + 1}:00")
+                InlineKeyboardButton.WithCallbackData($"{startTime}:00 - {middleTime}:00", $"{startTime}:00"),
+                InlineKeyboardButton.WithCallbackData($"{middleTime}:00 - {endTime}:00", $"{middleTime}:00")
             });
         }
 
@@ -225,9 +229,10 @@ public static class MenuButtons
 
         foreach (var training in trainings)
         {
+            string? username = training.ClientUsername == "окно" ? "🖼️ window" : "🪪 " + training.ClientUsername;
             string text = command == "delete"
-                ? $"⏳{training.Time:dd.MM HH:mm} 📍{training.Location} 👤@{training.ClientUsername}"
-                : $"⏳{training.Time:dd.MM HH:mm} 📍{training.Location}";
+                ? $"⌚️ {training.Time:dd.MM HH:mm} 📍{training.Location} {username}"
+                : $"⌚️ {training.Time:dd.MM HH:mm} 📍{training.Location}";
             buttons.Add(new List<InlineKeyboardButton>
             {
                 InlineKeyboardButton.WithCallbackData(
@@ -274,7 +279,7 @@ public static class MenuButtons
 
         return new InlineKeyboardMarkup(buttons);
     }
-    
+
     public static InlineKeyboardMarkup GetButtonsForClientForm(Client client)
     {
         List<List<InlineKeyboardButton>> buttons = new List<List<InlineKeyboardButton>>
@@ -284,26 +289,26 @@ public static class MenuButtons
                 InlineKeyboardButton.WithCallbackData($"рост: {client.Height}", "edit*height"),
                 InlineKeyboardButton.WithCallbackData($"вес: {client.Weight}", "edit*weight")
             },
-            
+
             new()
             {
                 InlineKeyboardButton.WithCallbackData($"грудь: {client.Bust}", "edit*bust"),
                 InlineKeyboardButton.WithCallbackData($"талия: {client.Waist}", "edit*waist")
             },
-            
+
             new()
             {
                 InlineKeyboardButton.WithCallbackData($"живот: {client.Stomach}", "edit*stomach"),
                 InlineKeyboardButton.WithCallbackData($"бёдра: {client.Hips}", "edit*hips")
             },
-            
+
             new()
             {
                 InlineKeyboardButton.WithCallbackData($"нога: {client.Legs}", "edit*legs"),
                 InlineKeyboardButton.WithCallbackData($"цель: {client.Goal}", "edit*goal")
             }
         };
-        
+
         return new InlineKeyboardMarkup(buttons);
     }
 }

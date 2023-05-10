@@ -66,7 +66,7 @@ public class TrainerLogic
         if (!_trainings.ContainsKey(message.Chat.Id))
             _trainings.Add(message.Chat.Id, training);
 
-        _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetTimeIntervals(), "время проведени тренировки");
+        _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetTimeIntervals(), "*время* тренировки");
     }
 
     public void AddTrainingTime(Message message, DateTime dt)
@@ -80,7 +80,7 @@ public class TrainerLogic
             if (!Statuses.ContainsKey(message.Chat.Id))
                 Statuses.Add(message.Chat.Id, TrainerActionStatus.AddTrainingLocation);
 
-            _sender.SendInputMessage(message.Chat, "адрес места проведения тренировки");
+            _sender.SendInputMessage(message.Chat, "*место* тренировки");
         }
     }
 
@@ -90,7 +90,7 @@ public class TrainerLogic
             _trainings[message.Chat.Id].Location = message.Text;
 
         List<Client> clients = _unitOfWork.Clients.GetAll().ToList();
-        _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetButtonsFromListOfClients(clients, "add_for_training"), "клиента для тренировки или 'окно', если хотите чтобы у клиентов появился слот для записи");
+        _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetButtonsFromListOfClients(clients, "add_for_training"), "*клиента* или *«окно»*, чтобы у клиентов появился слот для записи");
     }
 
     public void AddClientForTraining(Message message, string identifier)
@@ -153,7 +153,7 @@ public class TrainerLogic
 
     public void AddTraining(Message message)
     {
-        _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetCalendarButtons(), "дату проведения тренировки");
+        _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetCalendarButtons(), "*дату* проведения тренировки");
     }
 
     public void CancelTraining(Message message)
@@ -168,7 +168,7 @@ public class TrainerLogic
             .ToList();
 
         _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetButtonsFromListOfTrainings(trainings, "delete"),
-            "тренировку, которую хотите удалить");
+            "тренировку, которую хотите *отменить*");
         
     }
 
@@ -198,11 +198,10 @@ public class TrainerLogic
                 timetable.Append(t).Append("\n\n");
         }
 
-        String text = timetable.Length == 0
-            ? "Тренировок на ближайшие 7 дней не запланировано :)"
-            : timetable.ToString();
-
-        _sender.SendTextMessage(message.Chat, text);
+        if (timetable.Length == 0)
+            _sender.SendEmptyTimetableMes(message.Chat);
+        else
+            _sender.SendTextMessage(message.Chat, timetable.ToString());
     }
 
     public void TrainerRegistration(Message message)
