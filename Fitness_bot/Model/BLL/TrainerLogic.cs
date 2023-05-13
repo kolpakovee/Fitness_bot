@@ -28,13 +28,17 @@ public class TrainerLogic
 
         Client client = new Client(message.Text, message.Chat.Id);
 
-        _unitOfWork.Clients.Add(client);
-        _unitOfWork.SaveChanges();
-
-        _sender.SendAddClientMes(message.Chat);
+        if (!_unitOfWork.Clients.GetAll().Contains(client) && !client.FinishedForm())
+        {
+            _unitOfWork.Clients.Add(client);
+            _unitOfWork.SaveChanges();
+            _sender.SendAddClientMes(message.Chat);
+        }
 
         if (Statuses.ContainsKey(message.Chat.Id))
             Statuses.Remove(message.Chat.Id);
+        
+        _sender.SendMenuMessage(message.Chat, MenuButtons.TrainerMenu());
     }
 
     public void DeleteClientByUsername(Message message, string identifier)
@@ -54,10 +58,18 @@ public class TrainerLogic
 
         if (Statuses.ContainsKey(message.Chat.Id))
             Statuses.Remove(message.Chat.Id);
+        
+        _sender.SendMenuMessage(message.Chat, MenuButtons.TrainerMenu());
     }
 
     public void AddTrainingDateWithoutTime(Message message, DateTime dt)
     {
+        if (dt < DateTime.Now)
+        {
+            _sender.SendTextMessage(message.Chat, "🌝Невозможность добавить тренировку в прошлое...");
+            Menu(message);
+            return;
+        }
         Training training = new Training(message.Chat.Id)
         {
             Time = dt
@@ -89,8 +101,14 @@ public class TrainerLogic
         if (_trainings.ContainsKey(message.Chat.Id))
             _trainings[message.Chat.Id].Location = message.Text;
 
-        List<Client> clients = _unitOfWork.Clients.GetAll().ToList();
+        List<Client> clients = _unitOfWork.Clients
+            .GetAll()
+            .Where(cl => cl.TrainerId == message.Chat.Id)
+            .ToList();
+        
         _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetButtonsFromListOfClients(clients, "add_for_training"), "*клиента* или *«окно»*, чтобы у клиентов появился слот для записи");
+
+        Statuses.Remove(message.Chat.Id);
     }
 
     public void AddClientForTraining(Message message, string identifier)
@@ -105,9 +123,21 @@ public class TrainerLogic
         _unitOfWork.Trainings.Add(_trainings[message.Chat.Id]);
         _unitOfWork.SaveChanges();
 
+        var client = _unitOfWork.Clients
+            .GetAll()
+            .FirstOrDefault(cl => cl.Identifier == identifier);
+
+        if (client != null)
+        {
+            Chat chat = new Chat {Id = client.Id};
+            _sender.SendTextMessage(chat, $"💪Ваш тренер добавил новую тренировку {_trainings[message.Chat.Id]}");
+        }
+
         _trainings.Remove(message.Chat.Id);
 
         _sender.SendAddTrainingMes(message);
+        
+        _sender.SendMenuMessage(message.Chat, MenuButtons.TrainerMenu());
     }
 
     public void DeleteTrainingByTime(Message message, String identifier)
@@ -135,6 +165,7 @@ public class TrainerLogic
                 _sender.SendTextMessage(clientChat, $"Ваш тренер {message.Chat.Username} отменил тренировку");
             }
 
+            _sender.SendMenuMessage(message.Chat, MenuButtons.TrainerMenu());
             return;
         }
 
@@ -151,9 +182,9 @@ public class TrainerLogic
         _sender.SendMenuMessage(message.Chat, MenuButtons.TrainerClientsMenu());
     }
 
-    public void AddTraining(Message message)
+    public void AddTraining(Message message, DateTime dateTime)
     {
-        _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetCalendarButtons(), "*дату* проведения тренировки");
+         _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetCalendarButtons(dateTime), "*дату* проведения тренировки");
     }
 
     public void CancelTraining(Message message)
@@ -202,6 +233,7 @@ public class TrainerLogic
             _sender.SendEmptyTimetableMes(message.Chat);
         else
             _sender.SendTextMessage(message.Chat, timetable.ToString());
+        _sender.SendMenuMessage(message.Chat, MenuButtons.TrainerMenu());
     }
 
     public void TrainerRegistration(Message message)
@@ -210,8 +242,8 @@ public class TrainerLogic
 
         _unitOfWork.Trainers.Add(new Trainer(message.Chat.Id, message.Chat.Username));
         _unitOfWork.SaveChanges();
-
-        _sender.SendTrainerInstructionMes(message.Chat);
+        
+        Menu(message);
     }
 
     public void CheckBase(Message message)
@@ -234,6 +266,7 @@ public class TrainerLogic
         if (client == null) return;
 
         _sender.SendTextMessage(message.Chat, client.ToString());
+        _sender.SendMenuMessage(message.Chat, MenuButtons.TrainerMenu());
     }
 
     public void AddClient(Message message)
@@ -245,8 +278,18 @@ public class TrainerLogic
 
     public void DeleteClient(Message message)
     {
+        var clients = _unitOfWork.Clients
+            .GetAll()
+            .Where(cl => cl.TrainerId == message.Chat.Id)
+            .ToList();
+        
         _sender.SendChooseMenuMessage(message.Chat,
-            MenuButtons.GetButtonsFromListOfClients(_unitOfWork.Clients.GetAll().ToList(), "remove_client"),
+            MenuButtons.GetButtonsFromListOfClients(clients, "remove_client"),
             "клиента, которого хотите удалить");
+    }
+
+    public void Menu(Message message)
+    {
+        _sender.SendMenuMessage(message.Chat, MenuButtons.TrainerMenu());
     }
 }

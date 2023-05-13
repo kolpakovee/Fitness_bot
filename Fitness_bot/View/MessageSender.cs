@@ -26,7 +26,7 @@ public class MessageSender
 
     public async void SendChooseMenuMessage(Chat chat, InlineKeyboardMarkup keyboardMarkup, string text)
     {
-        await _botClient.SendTextMessageAsync(chat,
+        var a = await _botClient.SendTextMessageAsync(chat,
             $"Выберите {text}:",
             replyMarkup: keyboardMarkup,
             parseMode: ParseMode.MarkdownV2,
@@ -38,15 +38,14 @@ public class MessageSender
         await _botClient.SendTextMessageAsync(chat,
             "Здравствуйте! Вы тренер и хотите пользоваться телеграмм-ботом Leo?",
             cancellationToken: _cancellationToken,
-            parseMode: ParseMode.MarkdownV2,
             replyMarkup: MenuButtons.YesOrNoButtons());
     }
 
     public async void SendFormStart(Chat chat)
     {
         await _botClient.SendTextMessageAsync(chat,
-            "Здравствуйте! Перед тем как начать пользоваться ботом необходимо заполнить небольшую анкету.",
-            parseMode: ParseMode.MarkdownV2,
+            "Хеллоу 🤪 Перед тем как начать пользоваться 🤖 необходимо заполнить анкету",
+            replyMarkup: MenuButtons.ReadyButton(),
             cancellationToken: _cancellationToken);
     }
 
@@ -54,48 +53,44 @@ public class MessageSender
     {
         await _botClient.SendTextMessageAsync(chat,
             $"Введите {text}:",
-            parseMode: ParseMode.MarkdownV2,
+            ParseMode.MarkdownV2,
             cancellationToken: _cancellationToken);
     }
  
     public async void SendFailureMessage(Chat chat, string text)
     {
         await _botClient.SendTextMessageAsync(chat,
-            $"Не удалось ввести {text}, попробуйте снова:",
-            parseMode: ParseMode.MarkdownV2,
+            $"Не удалось ввести {text} 😬",
             cancellationToken: _cancellationToken);
     }
 
     public async void SendFormFinish(Chat chat)
     {
         await _botClient.SendTextMessageAsync(chat,
-            "Вы успешно прошли анкету, теперь вам открыт основной функционал!",
+            "Анкета пройдена 🎉 Let’s go",
             replyMarkup: MenuButtons.ClientMenu(),
-            parseMode: ParseMode.MarkdownV2,
             cancellationToken: _cancellationToken);
     }
     
     public async void SendExpQuestion(Chat chat)
     {
         await _botClient.SendTextMessageAsync(chat, 
-            "Есть ли у вас опыт в спорте?",
-            parseMode: ParseMode.MarkdownV2,
+            "Есть ли у вас опыт в спорте? 🏋🏼",
             cancellationToken: _cancellationToken);
     }
 
     public async void SendAddClientMes(Chat chat)
     {
         await _botClient.SendTextMessageAsync(chat,
-            "Клиент успешно добавлен в базу данных. Теперь ему необходимо заполнить анкету.",
-            parseMode: ParseMode.MarkdownV2,
+            "Клиент добавлен 🥳 Теперь ему необходимо *заполнить анкету*",
+            ParseMode.MarkdownV2,
             cancellationToken: _cancellationToken);
     }
     
     public async void SendDeleteClientMes(Chat chat)
     {
         await _botClient.SendTextMessageAsync(chat,
-            "Клиент успешно удалён из базы данных.",
-            parseMode: ParseMode.MarkdownV2,
+            "Клиент был удален 🥺💔",
             cancellationToken: _cancellationToken);
     }
 
@@ -119,7 +114,6 @@ public class MessageSender
     {
         await _botClient.SendTextMessageAsync(chat,
             text,
-            parseMode: ParseMode.MarkdownV2,
             cancellationToken: _cancellationToken);
     }
     
@@ -134,24 +128,7 @@ public class MessageSender
     public async void SendAddOrDeleteClientMes(Chat chat, string text)
     {
         await _botClient.SendTextMessageAsync(chat,
-            $"Чтобы {text} клиента, введите его имя пользователя в Telegram:",
-            parseMode: ParseMode.MarkdownV2,
-            cancellationToken: _cancellationToken);
-    }
-
-    public async void SendTrainerInstructionMes(Chat chat)
-    {
-        await _botClient.SendTextMessageAsync(chat,
-            "Инстукция для тренера",
-            replyMarkup: MenuButtons.TrainerMenu(),
-            parseMode: ParseMode.MarkdownV2,
-            cancellationToken: _cancellationToken);
-    }
-
-    public async void SendClientInstructionMes(Chat chat)
-    {
-        await _botClient.SendTextMessageAsync(chat,
-            "Инструкция для клиента",
+            $"Чтобы {text} клиента, введите его имя пользователя в Telegram *\\(без @\\)*:",
             parseMode: ParseMode.MarkdownV2,
             cancellationToken: _cancellationToken);
     }
@@ -160,7 +137,6 @@ public class MessageSender
     {
         await _botClient.SendTextMessageAsync(chat,
             "Извините, тренер пока не добавил вас в список своих клиентов",
-            parseMode: ParseMode.MarkdownV2,
             cancellationToken: _cancellationToken);
     }
 
@@ -168,7 +144,11 @@ public class MessageSender
     {
         await _botClient.SendTextMessageAsync(chat,
             "Извините, но я не могу определить ваше имя пользователя в Telegram, чтобы идентифицировать :(",
-            parseMode: ParseMode.MarkdownV2,
             cancellationToken: _cancellationToken);
+    }
+
+    public async void DeleteMessageAsync(Message message)
+    {
+        await _botClient.DeleteMessageAsync(message.Chat.Id, message.MessageId,  _cancellationToken);
     }
 }

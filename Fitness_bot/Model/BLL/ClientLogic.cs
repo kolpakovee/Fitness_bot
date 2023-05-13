@@ -56,18 +56,18 @@ public class ClientLogic
             Clients[message.Chat.Id].Goal = message.Text;
         if (Statuses.ContainsKey(message.Chat.Id))
             Statuses[message.Chat.Id] = ClientActionStatus.AddWeight;
-        _sender.SendInputMessage(message.Chat, "вес (в кг)");
+        _sender.SendInputMessage(message.Chat, "вес \\(в кг\\)");
     }
 
     public void InputWeight(Message message)
     {
-        if (int.TryParse(message.Text, out int weight))
+        if (int.TryParse(message.Text, out int weight) && weight is > 0 and < 200)
         {
             if (Clients.ContainsKey(message.Chat.Id))
                 Clients[message.Chat.Id].Weight = weight;
             if (Statuses.ContainsKey(message.Chat.Id))
                 Statuses[message.Chat.Id] = ClientActionStatus.AddHeight;
-            _sender.SendInputMessage(message.Chat, "рост (в см)");
+            _sender.SendInputMessage(message.Chat, "рост \\(в см\\)");
         }
         else
             _sender.SendFailureMessage(message.Chat, "вес");
@@ -75,7 +75,7 @@ public class ClientLogic
 
     public void InputHeight(Message message)
     {
-        if (int.TryParse(message.Text, out int height))
+        if (int.TryParse(message.Text, out int height) && height is > 0 and < 250)
         {
             if (Clients.ContainsKey(message.Chat.Id))
                 Clients[message.Chat.Id].Height = height;
@@ -102,18 +102,18 @@ public class ClientLogic
             Clients[message.Chat.Id].HaveExp = message.Text;
         if (Statuses.ContainsKey(message.Chat.Id))
             Statuses[message.Chat.Id] = ClientActionStatus.AddBust;
-        _sender.SendInputMessage(message.Chat, "обхват груди (в см)");
+        _sender.SendInputMessage(message.Chat, "обхват груди \\(в см\\)");
     }
 
     public void InputBust(Message message)
     {
-        if (int.TryParse(message.Text, out int bust))
+        if (int.TryParse(message.Text, out int bust) && bust is > 0 and < 200)
         {
             if (Clients.ContainsKey(message.Chat.Id))
                 Clients[message.Chat.Id].Bust = bust;
             if (Statuses.ContainsKey(message.Chat.Id))
                 Statuses[message.Chat.Id] = ClientActionStatus.AddWaist;
-            _sender.SendInputMessage(message.Chat, "обхват талии (в см)");
+            _sender.SendInputMessage(message.Chat, "обхват талии \\(в см\\)");
         }
         else
             _sender.SendFailureMessage(message.Chat, "обхват груди");
@@ -121,13 +121,13 @@ public class ClientLogic
 
     public void InputWaist(Message message)
     {
-        if (int.TryParse(message.Text, out int waist))
+        if (int.TryParse(message.Text, out int waist) && waist is > 0 and < 200)
         {
             if (Clients.ContainsKey(message.Chat.Id))
                 Clients[message.Chat.Id].Waist = waist;
             if (Statuses.ContainsKey(message.Chat.Id))
                 Statuses[message.Chat.Id] = ClientActionStatus.AddStomach;
-            _sender.SendInputMessage(message.Chat, "обхват живота (в см)");
+            _sender.SendInputMessage(message.Chat, "обхват живота \\(в см\\)");
         }
         else
             _sender.SendFailureMessage(message.Chat, "обхват талии");
@@ -135,27 +135,27 @@ public class ClientLogic
 
     public void InputStomach(Message message)
     {
-        if (int.TryParse(message.Text, out int stomach))
+        if (int.TryParse(message.Text, out int stomach) && stomach is > 0 and < 200)
         {
             if (Clients.ContainsKey(message.Chat.Id))
                 Clients[message.Chat.Id].Stomach = stomach;
             if (Statuses.ContainsKey(message.Chat.Id))
                 Statuses[message.Chat.Id] = ClientActionStatus.AddHips;
-            _sender.SendInputMessage(message.Chat, "обхват бёдер (в см)");
+            _sender.SendInputMessage(message.Chat, "обхват бёдер \\(в см\\)");
         }
         else
-            _sender.SendFailureMessage(message.Chat, "обхват живота (в см)");
+            _sender.SendFailureMessage(message.Chat, "обхват живота");
     }
 
     public void InputHips(Message message)
     {
-        if (int.TryParse(message.Text, out int hips))
+        if (int.TryParse(message.Text, out int hips) && hips is > 0 and < 200)
         {
             if (Clients.ContainsKey(message.Chat.Id))
                 Clients[message.Chat.Id].Hips = hips;
             if (Statuses.ContainsKey(message.Chat.Id))
                 Statuses[message.Chat.Id] = ClientActionStatus.AddLegs;
-            _sender.SendInputMessage(message.Chat, "обхват ноги (в см)");
+            _sender.SendInputMessage(message.Chat, "обхват ноги \\(в см\\)");
         }
         else
             _sender.SendFailureMessage(message.Chat, "обхват бёдер");
@@ -163,7 +163,7 @@ public class ClientLogic
 
     public void InputLegs(Message message)
     {
-        if (int.TryParse(message.Text, out int legs))
+        if (int.TryParse(message.Text, out int legs) && legs is > 0 and < 200)
         {
             if (Clients.ContainsKey(message.Chat.Id))
                 Clients[message.Chat.Id].Legs = legs;
@@ -213,6 +213,7 @@ public class ClientLogic
             : timetable.ToString();
 
         _sender.SendTextMessage(message.Chat, text);
+        _sender.SendMenuMessage(message.Chat, MenuButtons.ClientMenu());
     }
 
     public void StartRecordTraining(Message message)
@@ -229,11 +230,12 @@ public class ClientLogic
         if (trainings.Count == 0)
         {
             _sender.SendTextMessage(message.Chat, "Окон на ближайщую неделю нет :(");
+            _sender.SendMenuMessage(message.Chat, MenuButtons.ClientMenu());
             return;
         }
 
         _sender.SendChooseMenuMessage(message.Chat, MenuButtons.GetButtonsFromListOfTrainings(trainings, "record"),
-            "слот из списка доступных:");
+            "слот из списка доступных");
     }
 
     public void FinishRecordTraining(Message message, string identifier)
@@ -250,6 +252,7 @@ public class ClientLogic
             Chat trainerChat = new Chat { Id = training.TrainerId };
             _sender.SendTextMessage(trainerChat,
                 $"Клиент {message.Chat.Username} записался на тренировку \n{training}");
+            _sender.SendMenuMessage(message.Chat, MenuButtons.ClientMenu());
             return;
         }
 
@@ -276,11 +279,13 @@ public class ClientLogic
 
             Chat trainerChat = new Chat { Id = training.TrainerId };
             _sender.SendTextMessage(trainerChat, $"Клиент {message.Chat.Username} отменил тренировку \n{training}");
-            _sender.SendTextMessage(message.Chat, "Тренировка успешно отменена.");
+            _sender.SendDeleteTrainingMes(message.Chat);
+            _sender.SendMenuMessage(message.Chat, MenuButtons.ClientMenu());
             return;
         }
 
         _sender.SendTextMessage(message.Chat, "Невозможно отменить тренировку, напишите тренеру лично");
+        _sender.SendMenuMessage(message.Chat, MenuButtons.ClientMenu());
     }
 
     public void StartEditForm(Message message)
@@ -310,6 +315,7 @@ public class ClientLogic
             case ClientActionStatus.EditGoal:
                 client.Goal = message.Text;
                 _unitOfWork.SaveChanges();
+                _sender.SendTextMessage(message.Chat, "Данные успешно обновлены 👌🏼");
                 break;
 
             case ClientActionStatus.EditWeight:
@@ -317,6 +323,7 @@ public class ClientLogic
                 {
                     client.Weight = w;
                     _unitOfWork.SaveChanges();
+                    _sender.SendTextMessage(message.Chat, "Данные успешно обновлены 👌🏼");
                 }
                 else
                     _sender.SendFailureMessage(message.Chat, "вес");
@@ -328,6 +335,7 @@ public class ClientLogic
                 {
                     client.Height = h;
                     _unitOfWork.SaveChanges();
+                    _sender.SendTextMessage(message.Chat, "Данные успешно обновлены 👌🏼");
                 }
                 else
                     _sender.SendFailureMessage(message.Chat, "рост");
@@ -339,6 +347,7 @@ public class ClientLogic
                 {
                     client.Bust = b;
                     _unitOfWork.SaveChanges();
+                    _sender.SendTextMessage(message.Chat, "Данные успешно обновлены 👌🏼");
                 }
                 else
                     _sender.SendFailureMessage(message.Chat, "обхват груди");
@@ -350,6 +359,7 @@ public class ClientLogic
                 {
                     client.Waist = waist;
                     _unitOfWork.SaveChanges();
+                    _sender.SendTextMessage(message.Chat, "Данные успешно обновлены 👌🏼");
                 }
                 else
                     _sender.SendFailureMessage(message.Chat, "обхват талии");
@@ -361,6 +371,7 @@ public class ClientLogic
                 {
                     client.Stomach = s;
                     _unitOfWork.SaveChanges();
+                    _sender.SendTextMessage(message.Chat, "Данные успешно обновлены 👌🏼");
                 }
                 else
                     _sender.SendFailureMessage(message.Chat, "обхват живота");
@@ -372,6 +383,7 @@ public class ClientLogic
                 {
                     client.Hips = hips;
                     _unitOfWork.SaveChanges();
+                    _sender.SendTextMessage(message.Chat, "Данные успешно обновлены 👌🏼");
                 }
                 else
                     _sender.SendFailureMessage(message.Chat, "обхват бёдер");
@@ -383,14 +395,15 @@ public class ClientLogic
                 {
                     client.Legs = legs;
                     _unitOfWork.SaveChanges();
+                    _sender.SendTextMessage(message.Chat, "Данные успешно обновлены 👌🏼");
                 }
                 else
                     _sender.SendFailureMessage(message.Chat, "обхват ноги");
 
                 break;
         }
-
-        _sender.SendTextMessage(message.Chat, "Данные успешно обновлены");
+        
+        _sender.SendMenuMessage(message.Chat, MenuButtons.ClientMenu());
 
         Statuses.Remove(message.Chat.Id);
     }
@@ -439,5 +452,27 @@ public class ClientLogic
                 _sender.SendInputMessage(message.Chat, "новую цель");
                 break;
         }
+    }
+    
+    public void Menu(Message message)
+    {
+        _sender.SendMenuMessage(message.Chat, MenuButtons.ClientMenu());
+    }
+
+    public void RegisterNewClient(Message message)
+    {
+        _sender.SendFormStart(message.Chat);
+        Statuses.Add(message.Chat.Id, ClientActionStatus.AddName);
+        Client client = _unitOfWork.Clients
+                            .GetAll()
+                            .FirstOrDefault(cl => cl.Identifier == message.Chat.Username) ??
+                        throw new InvalidOperationException();
+        client.Id = message.Chat.Id;
+        Clients.Add(message.Chat.Id, client);
+    }
+
+    public void SendFirstQuestion(Message message)
+    {
+        _sender.SendInputMessage(message.Chat, "имя");
     }
 }

@@ -43,16 +43,7 @@ public class TelegramBotLogic
                 break;
 
             case IdentificationStatus.PartRegisteredClient:
-                _sender.SendClientInstructionMes(message.Chat);
-                _sender.SendFormStart(message.Chat);
-                Client.Statuses.Add(message.Chat.Id, ClientActionStatus.AddName);
-                Client client = _unitOfWork.Clients
-                                    .GetAll()
-                                    .FirstOrDefault(cl => cl.Identifier == message.Chat.Username) ??
-                                throw new InvalidOperationException();
-                client.Id = message.Chat.Id;
-                Client.Clients.Add(message.Chat.Id, client);
-                _sender.SendInputMessage(message.Chat, "имя");
+                Client.RegisterNewClient(message);
                 break;
 
             case IdentificationStatus.RegisteredTrainer:
@@ -86,5 +77,10 @@ public class TelegramBotLogic
         }
 
         return IdentificationStatus.UnregisteredUser;
+    }
+
+    public void DeleteMessage(Message message)
+    {
+        _sender.DeleteMessageAsync(message);
     }
 }

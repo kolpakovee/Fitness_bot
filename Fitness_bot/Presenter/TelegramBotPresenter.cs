@@ -158,6 +158,18 @@ public class TelegramBotPresenter
 
         if (queryMessage == null)
             return;
+        
+        if (update.CallbackQuery?.Data != "ignore")
+        {
+            try
+            {
+                _logic.DeleteMessage(queryMessage);
+            }
+            catch
+            {
+                Console.WriteLine("Не удалось удалить сообщение");
+            }
+        }
 
         switch (update.CallbackQuery?.Data)
         {
@@ -170,7 +182,7 @@ public class TelegramBotPresenter
                 break;
 
             case "add_training":
-                _logic.Trainer.AddTraining(queryMessage);
+                _logic.Trainer.AddTraining(queryMessage, DateTime.Now);
                 break;
 
             case "cancel_training":
@@ -219,6 +231,29 @@ public class TelegramBotPresenter
 
             case "i_am_client":
                 _logic.RejectNewUser(queryMessage);
+                break;
+            
+            case "ready":
+                _logic.Client.SendFirstQuestion(queryMessage);
+                break;
+
+            case var less when less?.Split('*')[0] == "<":
+                DateTime.TryParseExact(less.Split('*')[1], "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None,
+                    out DateTime d1);
+                _logic.Trainer.AddTraining(queryMessage, d1.AddMonths(-1));
+                break;
+
+            case var more when more?.Split('*')[0] == ">":
+                DateTime.TryParseExact(more.Split('*')[1], "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None,
+                    out DateTime d2);
+                _logic.Trainer.AddTraining(queryMessage, d2.AddMonths(1));
+                break;
+
+            case var cancel when cancel?.Split('*')[0] == "cancel":
+                if (cancel.Split('*')[1] == "cl")
+                    _logic.Client.Menu(queryMessage);
+                else
+                    _logic.Trainer.Menu(queryMessage);
                 break;
 
             case var str when str?.Split('*')[0] == "delete":

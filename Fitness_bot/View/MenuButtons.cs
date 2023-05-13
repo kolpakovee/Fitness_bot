@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text;
 using Fitness_bot.Model.Domain;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -50,6 +49,13 @@ public static class MenuButtons
                 InlineKeyboardButton.WithCallbackData(
                     "➖Отменить тренировку",
                     "cancel_training")
+            },
+            new []
+            {
+                InlineKeyboardButton.WithCallbackData(
+                    "↩️ В главное меню",
+                    "cancel*t"
+                ), 
             }
         });
         return inlineKeyboard;
@@ -62,20 +68,27 @@ public static class MenuButtons
             new[]
             {
                 InlineKeyboardButton.WithCallbackData(
-                    "Добавить клиента",
+                    "❤️ Добавить клиента",
                     "add_client")
             },
             new[]
             {
                 InlineKeyboardButton.WithCallbackData(
-                    "Удалить клиента",
+                    "💔 Удалить клиента",
                     "delete_client")
             },
             new[]
             {
                 InlineKeyboardButton.WithCallbackData(
-                    "Просмотр базы",
+                    "🗂️ Просмотр базы",
                     "check_base")
+            },
+            new []
+            {
+                InlineKeyboardButton.WithCallbackData(
+                    "↩️ В главное меню",
+                    "cancel*t"
+                ), 
             }
         });
         return inlineKeyboard;
@@ -88,19 +101,19 @@ public static class MenuButtons
             new[]
             {
                 InlineKeyboardButton.WithCallbackData(
-                    "Расписание",
+                    "📆 Расписание",
                     "cl_timetable")
             },
             new[]
             {
                 InlineKeyboardButton.WithCallbackData(
-                    "Тренировки",
+                    "🏋🏼 Тренировки",
                     "cl_trainings")
             },
             new[]
             {
                 InlineKeyboardButton.WithCallbackData(
-                    "Анкета",
+                    "🪪 Анкета",
                     "cl_form")
             }
         });
@@ -126,6 +139,20 @@ public static class MenuButtons
         });
         return inlineKeyboard;
     }
+    
+    public static InlineKeyboardMarkup ReadyButton()
+    {
+        InlineKeyboardMarkup inlineKeyboard = new(new[]
+        {
+            new[]
+            {
+                InlineKeyboardButton.WithCallbackData(
+                    "Я готов 🚀",
+                    "ready")
+            },
+        });
+        return inlineKeyboard;
+    }
 
     public static InlineKeyboardMarkup ClientTrainingMenu()
     {
@@ -134,27 +161,33 @@ public static class MenuButtons
             new[]
             {
                 InlineKeyboardButton.WithCallbackData(
-                    "Записаться на тренировку",
+                    "💪🏽 Записаться на тренировку",
                     "cl_record")
             },
             new[]
             {
                 InlineKeyboardButton.WithCallbackData(
-                    "Отменить тренировку",
+                    "🗿 Отменить тренировку",
                     "cl_cancel")
+            },
+            new []
+            {
+                InlineKeyboardButton.WithCallbackData(
+                    "↩️ В главное меню",
+                    "cancel*cl"
+                ), 
             }
         });
         return inlineKeyboard;
     }
 
-    public static InlineKeyboardMarkup GetCalendarButtons()
+    public static InlineKeyboardMarkup GetCalendarButtons(DateTime date)
     {
-        DateTime date = DateTime.Now;
         List<List<InlineKeyboardButton>> buttons = new List<List<InlineKeyboardButton>>
         {
             new()
             {
-                InlineKeyboardButton.WithCallbackData(date.ToString("MMMM", new CultureInfo("ru-RU")))
+                InlineKeyboardButton.WithCallbackData(date.ToString("MMMM", new CultureInfo("ru-RU")), "ignore")
             },
             new()
             {
@@ -196,9 +229,15 @@ public static class MenuButtons
                     firstDay.ToString("dd/MM/yyyy")));
                 firstDay = firstDay.AddDays(1);
             }
-
             buttons.Add(keyboardButtons);
         }
+
+        buttons.Add(new List<InlineKeyboardButton>
+        {
+            InlineKeyboardButton.WithCallbackData("<", $"<*{date:dd/MM/yyyy}"),
+            InlineKeyboardButton.WithCallbackData("cancel", "cancel*t"),
+            InlineKeyboardButton.WithCallbackData(">", $">*{date:dd/MM/yyyy}")
+        });
 
         return new InlineKeyboardMarkup(buttons);
     }
@@ -226,10 +265,19 @@ public static class MenuButtons
     public static InlineKeyboardMarkup GetButtonsFromListOfTrainings(List<Training> trainings, string command)
     {
         List<List<InlineKeyboardButton>> buttons = new List<List<InlineKeyboardButton>>();
+        
+        if (trainings.Count == 0)
+        {
+            buttons.Add(new List<InlineKeyboardButton>
+            {
+                InlineKeyboardButton.WithCallbackData("Пока что здесь пусто :)", "empty")
+            });
+            return new InlineKeyboardMarkup(buttons);
+        }
 
         foreach (var training in trainings)
         {
-            string? username = training.ClientUsername == "окно" ? "🖼️ window" : "🪪 " + training.ClientUsername;
+            string username = training.ClientUsername == "окно" ? "🖼️ window" : "🪪 " + training.ClientUsername;
             string text = command == "delete"
                 ? $"⌚️ {training.Time:dd.MM HH:mm} 📍{training.Location} {username}"
                 : $"⌚️ {training.Time:dd.MM HH:mm} 📍{training.Location}";
@@ -260,7 +308,7 @@ public static class MenuButtons
         {
             buttons.Add(new List<InlineKeyboardButton>
             {
-                InlineKeyboardButton.WithCallbackData("Пока что здесь пусто :)", "ignore")
+                InlineKeyboardButton.WithCallbackData("Пока что здесь пусто :)", "empty")
             });
             return new InlineKeyboardMarkup(buttons);
         }
@@ -276,6 +324,11 @@ public static class MenuButtons
                 InlineKeyboardButton.WithCallbackData(str, $"{command}*{client.Identifier}")
             });
         }
+        
+        buttons.Add(new List<InlineKeyboardButton>
+        {
+            InlineKeyboardButton.WithCallbackData("↩️ В главное меню", "cancel*t")
+        });
 
         return new InlineKeyboardMarkup(buttons);
     }
@@ -306,6 +359,10 @@ public static class MenuButtons
             {
                 InlineKeyboardButton.WithCallbackData($"нога: {client.Legs}", "edit*legs"),
                 InlineKeyboardButton.WithCallbackData($"цель: {client.Goal}", "edit*goal")
+            },
+            new List<InlineKeyboardButton>
+            {
+                InlineKeyboardButton.WithCallbackData("↩️ В главное меню", "cancel*cl")
             }
         };
 
